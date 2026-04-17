@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@defensagob · Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242838;
+    --border: #2e3347;
+    --accent: #4f8ef7;
+    --accent2: #7c5cbf;
+    --green: #3ecf8e;
+    --red: #f87171;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; }
+
+  /* ── Layout ── */
+  .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 16px; font-weight: 700; color: var(--text); }
+  .header .badge { background: var(--accent); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+  .header .spacer { flex: 1; }
+  .header .last-update { font-size: 11px; color: var(--text3); }
+
+  .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 12px 20px; cursor: pointer; white-space: nowrap; color: var(--text2); border-bottom: 2px solid transparent; font-size: 13px; font-weight: 500; transition: all .2s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Cards ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 16px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .kpi { background: var(--surface2); border-radius: var(--radius); padding: 16px; text-align: center; }
+  .kpi .val { font-size: 24px; font-weight: 700; color: var(--text); }
+  .kpi .lbl { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .kpi .delta { font-size: 12px; margin-top: 4px; }
+  .delta.up { color: var(--green); }
+  .delta.down { color: var(--red); }
+
+  /* ── Day selector ── */
+  .day-selector { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; scrollbar-width: none; }
+  .day-selector::-webkit-scrollbar { display: none; }
+  .day-btn { flex-shrink: 0; padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-size: 12px; transition: all .2s; }
+  .day-btn:hover { border-color: var(--accent); color: var(--text); }
+  .day-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .day-btn.pending { border-color: var(--orange); }
+  .day-btn .day-score { font-size: 10px; display: block; margin-top: 2px; opacity: .7; }
+
+  /* ── Posts ── */
+  .post-card { background: var(--surface2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border-left: 3px solid var(--border); }
+  .post-card.high { border-left-color: var(--green); }
+  .post-card.mid  { border-left-color: var(--yellow); }
+  .post-card.low  { border-left-color: var(--text3); }
+  .post-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+  .post-meta { font-size: 12px; color: var(--text2); display: flex; gap: 10px; flex-wrap: wrap; }
+  .post-meta .author { background: var(--surface); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .post-meta .author.pending { background: rgba(251,146,60,.15); color: var(--orange); }
+  .post-score { font-size: 20px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .post-text { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 12px; }
+  .post-stats { display: flex; gap: 16px; font-size: 12px; color: var(--text2); flex-wrap: wrap; }
+  .post-stats span { display: flex; align-items: center; gap: 4px; }
+
+  /* ── Comments ── */
+  .comments-toggle { font-size: 12px; color: var(--accent); cursor: pointer; margin-top: 10px; display: inline-block; }
+  .comments-list { margin-top: 10px; display: none; }
+  .comments-list.open { display: block; }
+  .comment-row { padding: 8px 12px; background: var(--surface); border-radius: 8px; margin-bottom: 6px; }
+  .comment-user { font-weight: 600; color: var(--accent); font-size: 12px; }
+  .comment-text { font-size: 12px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+  .comment-meta { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .tono-badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 4px; }
+  .tono-neg { background: rgba(248,113,113,.15); color: var(--red); }
+  .tono-off { background: rgba(251,146,60,.15); color: var(--orange); }
+  .tono-pos { background: rgba(62,207,142,.15); color: var(--green); }
+  .tono-neu { background: rgba(100,116,139,.15); color: var(--text3); }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* ── Alerts ── */
+  .alert { padding: 14px 16px; border-radius: var(--radius); margin-bottom: 12px; }
+  .alert-red    { background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.3); }
+  .alert-orange { background: rgba(251,146,60,.1);  border: 1px solid rgba(251,146,60,.3); }
+  .alert-green  { background: rgba(62,207,142,.1);  border: 1px solid rgba(62,207,142,.3); }
+  .alert-title { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+  .alert-body  { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+  /* ── Analysis text ── */
+  .analysis-text { font-size: 13px; line-height: 1.8; color: var(--text2); white-space: pre-wrap; }
+  .analysis-text h3 { color: var(--text); font-size: 14px; margin-top: 20px; margin-bottom: 8px; }
+
+  /* ── Charts ── */
+  .chart-wrap { position: relative; height: 220px; }
+
+  /* ── Loading ── */
+  .loading { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .content { padding: 12px; }
+    .kpi .val { font-size: 20px; }
+    .post-score { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>@defensagob</h1>
+    <span class="last-update" id="lastUpdate">Cargando...</span>
+  </div>
+  <span class="spacer"></span>
+  <span class="badge" id="pendingBadge" style="display:none"></span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('overview')">Resumen</div>
+  <div class="tab" onclick="switchTab('history')">Histórico</div>
+  <div class="tab" onclick="switchTab('authors')">Autores</div>
+  <div class="tab" onclick="switchTab('alerts')">Alertas</div>
+  <div class="tab" onclick="switchTab('strategy')">Estrategia</div>
+</div>
+
+<div class="content">
+
+  <!-- ══ OVERVIEW ══ -->
+  <div id="tab-overview" class="section active">
+    <div id="overview-loading" class="loading"><div class="spinner"></div>Cargando datos...</div>
+    <div id="overview-content" style="display:none">
+      <div class="day-selector" id="daySelectorOverview"></div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="card">
+        <div class="card-title">Posts del día</div>
+        <div id="postsList"></div>
+      </div>
+
+      <div class="card" id="tonoCard" style="display:none">
+        <div class="card-title">Análisis de tono general</div>
+        <p class="analysis-text" id="tonoText"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HISTÓRICO ══ -->
+  <div id="tab-history" class="section">
+    <div class="card">
+      <div class="card-title">Score medio diario (últimos 30 días)</div>
+      <div class="chart-wrap"><canvas id="chartScore"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Seguidores</div>
+      <div class="chart-wrap"><canvas id="chartFollowers"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Historial completo</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Posts</th><th>Score medio</th><th>Vis. totales</th><th>Seguidores</th><th>Estado</th></tr></thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ AUTORES ══ -->
+  <div id="tab-authors" class="section">
+    <div class="card">
+      <div class="card-title">Rendimiento por autor</div>
+      <div class="chart-wrap"><canvas id="chartAuthors"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Estadísticas detalladas</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Autor</th><th>Posts</th><th>Score medio</th><th>Total likes</th><th>Total vis.</th><th>Formato frecuente</th></tr></thead>
+          <tbody id="authorsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ALERTAS ══ -->
+  <div id="tab-alerts" class="section">
+    <div class="card">
+      <div class="card-title">Usuarios reincidentes en comentarios</div>
+      <div id="flaggedList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rendimiento por formato de contenido</div>
+      <div class="chart-wrap"><canvas id="chartFormats"></canvas></div>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead><tr><th>Formato</th><th>Nº posts</th><th>Score medio</th><th>Vis. medias</th></tr></thead>
+          <tbody id="formatsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ESTRATEGIA ══ -->
+  <div id="tab-strategy" class="section">
+    <div class="card">
+      <div class="card-title">Mejor franja horaria para publicar</div>
+      <div class="chart-wrap"><canvas id="chartTiming"></canvas></div>
+    </div>
+    <div class="card" id="analysisCard" style="display:none">
+      <div class="card-title">Análisis y recomendaciones del último informe</div>
+      <div id="analysisText" class="analysis-text"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API = '';   // Misma origin. En desarrollo: 'http://localhost:8000'
+let allReports   = [];
+let currentReport = null;
+let charts = {};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const fmt = (n) => n == null ? '—' : Number(n).toLocaleString('es-ES');
+const fmtDate = (d) => {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  const months = ['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${parseInt(day)} ${months[parseInt(m)]}`;
+};
+const scoreColor = (s) => s >= 400 ? 'high' : s >= 200 ? 'mid' : 'low';
+const tonoClass = (t) => {
+  if (!t) return 'tono-neu';
+  if (t.includes('Neg') || t.includes('Hosti')) return 'tono-neg';
+  if (t.includes('Off') || t.includes('⚠️')) return 'tono-off';
+  if (t.includes('Pos') || t.includes('✅')) return 'tono-pos';
+  return 'tono-neu';
+};
+
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
+async function apiFetch(path) {
+  const r = await fetch(API + path);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['overview','history','authors','alerts','strategy'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+
+  if (name === 'history'  && allReports.length) renderHistory();
+  if (name === 'authors')  loadAuthors();
+  if (name === 'alerts')   loadAlerts();
+  if (name === 'strategy') loadStrategy();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    allReports = await apiFetch('/api/reports');
+  } catch(e) {
+    document.getElementById('overview-loading').innerHTML =
+      '<p style="color:var(--red)">No se pudo conectar con la API.<br>Asegúrate de que el servidor está corriendo.</p>';
+    return;
+  }
+
+  // Pending badge
+  const pending = allReports.filter(r => !r.authors_complete).length;
+  if (pending) {
+    const badge = document.getElementById('pendingBadge');
+    badge.textContent = `${pending} pendiente${pending>1?'s':''}`;
+    badge.style.display = '';
+    badge.style.background = 'var(--orange)';
+  }
+
+  // Last update
+  if (allReports.length) {
+    document.getElementById('lastUpdate').textContent =
+      'Último informe: ' + fmtDate(allReports[0].date);
+  }
+
+  buildDaySelector('daySelectorOverview');
+  if (allReports.length) loadDayDetail(allReports[0].date);
+}
+
+// ── Day selector ──────────────────────────────────────────────────────────────
+function buildDaySelector(containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  allReports.slice(0, 30).forEach((r, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'day-btn' + (i === 0 ? ' active' : '') + (!r.authors_complete ? ' pending' : '');
+    btn.dataset.date = r.date;
+    btn.innerHTML = `${fmtDate(r.date)}<span class="day-score">⚡${fmt(r.score_medio)}</span>`;
+    btn.onclick = () => {
+      document.querySelectorAll(`#${containerId} .day-btn`).forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadDayDetail(r.date);
+    };
+    el.appendChild(btn);
+  });
+}
+
+// ── Day detail ────────────────────────────────────────────────────────────────
+async function loadDayDetail(dateStr) {
+  document.getElementById('overview-loading').style.display = '';
+  document.getElementById('overview-content').style.display = 'none';
+
+  let data;
+  try {
+    data = await apiFetch('/api/reports/' + dateStr);
+  } catch(e) {
+    document.getElementById('overview-loading').innerHTML =
+      `<p style="color:var(--red)">Error cargando ${dateStr}</p>`;
+    return;
+  }
+  currentReport = data;
+
+  // KPIs
+  const kpis = [
+    { val: fmt(data.score_medio), lbl: 'Score medio' },
+    { val: fmt(data.total_vis), lbl: 'Visualizaciones' },
+    { val: fmt(data.posts?.length), lbl: 'Posts' },
+    { val: fmt(data.followers), lbl: 'Seguidores' },
+  ];
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k =>
+    `<div class="kpi"><div class="val">${k.val}</div><div class="lbl">${k.lbl}</div></div>`
+  ).join('');
+
+  // Posts
+  const posts = data.posts || [];
+  const maxScore = Math.max(...posts.map(p => p.score || 0), 1);
+  document.getElementById('postsList').innerHTML = posts.map(p => {
+    const authorClass = (!p.author || p.author === 'PENDIENTE') ? 'pending' : '';
+    const authorLabel = (!p.author || p.author === 'PENDIENTE') ? '⏳ Pendiente' : p.author;
+    const comments = p.comments || [];
+    const commentsHTML = comments.length ? `
+      <span class="comments-toggle" onclick="toggleComments(this)">▶ ${comments.length} comentario${comments.length>1?'s':''}</span>
+      <div class="comments-list">
+        ${comments.map(c => `
+          <div class="comment-row">
+            <div class="comment-user">${c.usuario || ''}</div>
+            <div class="comment-text">${escHtml(c.texto || '')}</div>
+            <div class="comment-meta">
+              ❤️ ${c.likes || 0} &nbsp;
+              <span class="tono-badge ${tonoClass(c.tono)}">${c.tono || '⚪'}</span>
+            </div>
+          </div>`).join('')}
+      </div>` : '';
+
+    return `
+    <div class="post-card ${scoreColor(p.score)}">
+      <div class="post-header">
+        <div>
+          <div class="post-meta">
+            <span>🕐 ${p.time || '?'}</span>
+            <span>📁 ${p.format || ''}</span>
+            <span class="author ${authorClass}">${authorLabel}</span>
+          </div>
+          <div style="font-weight:600;font-size:13px;margin-top:6px;color:var(--text)">${escHtml(p.title || '')}</div>
+        </div>
+        <div class="post-score">⚡${fmt(p.score)}</div>
+      </div>
+      <div class="post-text">${escHtml(p.text || '')}</div>
+      <div class="post-stats">
+        <span>💬 ${fmt(p.respuestas)}</span>
+        <span>🔁 ${fmt(p.reposts)}</span>
+        <span>❤️ ${fmt(p.likes)}</span>
+        <span>🔖 ${fmt(p.guardados)}</span>
+        <span>👁 ${fmt(p.visualizaciones)}</span>
+      </div>
+      ${commentsHTML}
+    </div>`;
+  }).join('');
+
+  // Tono
+  if (data.tono_general) {
+    document.getElementById('tonoText').textContent = data.tono_general;
+    document.getElementById('tonoCard').style.display = '';
+  }
+
+  document.getElementById('overview-loading').style.display = 'none';
+  document.getElementById('overview-content').style.display = '';
+}
+
+function toggleComments(el) {
+  const list = el.nextElementSibling;
+  const open = list.classList.toggle('open');
+  el.textContent = (open ? '▼ ' : '▶ ') + el.textContent.replace(/^[▶▼] /, '');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory() {
+  // Table
+  document.getElementById('historyTable').innerHTML = allReports.map(r => `
+    <tr style="cursor:pointer" onclick="switchTab('overview');loadDayDetail('${r.date}')">
+      <td><strong>${fmtDate(r.date)}</strong><br><span style="color:var(--text3);font-size:11px">${r.date}</span></td>
+      <td>${r.post_count || 0}</td>
+      <td><strong>${fmt(r.score_medio)}</strong></td>
+      <td>${fmt(r.total_vis)}</td>
+      <td>${fmt(r.followers)}</td>
+      <td>${r.authors_complete
+        ? '<span style="color:var(--green)">✅ Completo</span>'
+        : `<span style="color:var(--orange)">⏳ ${r.pending_authors} pend.</span>`}</td>
+    </tr>`).join('');
+
+  // Score chart
+  const reversed = [...allReports].reverse().slice(-30);
+  drawChart('chartScore', {
+    labels: reversed.map(r => fmtDate(r.date)),
+    datasets: [{
+      label: 'Score medio', data: reversed.map(r => r.score_medio || 0),
+      borderColor: '#4f8ef7', backgroundColor: 'rgba(79,142,247,.1)',
+      fill: true, tension: .4, pointRadius: 3,
+    }]
+  });
+
+  // Followers chart
+  drawChart('chartFollowers', {
+    labels: reversed.map(r => fmtDate(r.date)),
+    datasets: [{
+      label: 'Seguidores', data: reversed.map(r => r.followers || null),
+      borderColor: '#3ecf8e', backgroundColor: 'rgba(62,207,142,.1)',
+      fill: true, tension: .4, pointRadius: 3,
+    }]
+  });
+}
+
+// ── Authors ───────────────────────────────────────────────────────────────────
+async function loadAuthors() {
+  let stats;
+  try { stats = await apiFetch('/api/stats/authors'); }
+  catch(e) { return; }
+
+  document.getElementById('authorsTable').innerHTML = stats.map(a => {
+    const topFormat = a.formats ? Object.entries(a.formats).sort((x,y) => y[1]-x[1])[0]?.[0] : '—';
+    return `<tr>
+      <td><strong>${a.author}</strong></td>
+      <td>${a.total_posts}</td>
+      <td><strong>${fmt(a.avg_score)}</strong></td>
+      <td>${fmt(a.total_likes)}</td>
+      <td>${fmt(a.total_vis)}</td>
+      <td>${topFormat || '—'}</td>
+    </tr>`;
+  }).join('');
+
+  drawChart('chartAuthors', {
+    labels: stats.map(a => a.author),
+    datasets: [{
+      label: 'Score medio', data: stats.map(a => a.avg_score),
+      backgroundColor: ['#4f8ef7','#3ecf8e','#7c5cbf','#fb923c','#fbbf24','#f87171','#22d3ee','#a78bfa'],
+    }]
+  }, 'bar');
+}
+
+// ── Alerts ────────────────────────────────────────────────────────────────────
+async function loadAlerts() {
+  // Flagged users
+  let flagged;
+  try { flagged = await apiFetch('/api/stats/flagged-users'); }
+  catch(e) { flagged = []; }
+
+  document.getElementById('flaggedList').innerHTML = flagged.length
+    ? flagged.map(u => {
+        const priority = u.apariciones >= 5 ? 'red' : u.apariciones >= 3 ? 'orange' : 'orange';
+        const tonos = u.ultimos_tonos || [];
+        const hasNeg = tonos.some(t => t && (t.includes('Neg') || t.includes('Hosti')));
+        return `
+          <div class="alert alert-${priority}">
+            <div class="alert-title">${u.usuario} · ${u.apariciones} apariciones ${u.apariciones >= 5 ? '🔴 Prioridad alta' : '⚠️'}</div>
+            <div class="alert-body">
+              Tonos: ${tonos.slice(0,3).join(' · ') || '—'}<br>
+              Últimos mensajes: ${u.ultimos_textos?.slice(0,2).map(t => `"${t}"`).join(' | ') || '—'}
+            </div>
+          </div>`;
+      }).join('')
+    : '<p style="color:var(--text3);text-align:center;padding:20px">No hay usuarios reincidentes registrados todavía.</p>';
+
+  // Formats
+  let formats;
+  try { formats = await apiFetch('/api/stats/formats'); }
+  catch(e) { formats = []; }
+
+  document.getElementById('formatsTable').innerHTML = formats.map(f => `
+    <tr>
+      <td><strong>${f.format}</strong></td>
+      <td>${f.count}</td>
+      <td>${fmt(f.avg_score)}</td>
+      <td>${fmt(f.avg_vis)}</td>
+    </tr>`).join('');
+
+  if (formats.length) {
+    drawChart('chartFormats', {
+      labels: formats.map(f => f.format),
+      datasets: [{
+        label: 'Score medio', data: formats.map(f => f.avg_score),
+        backgroundColor: ['#4f8ef7','#3ecf8e','#fb923c','#fbbf24'],
+      }]
+    }, 'bar');
+  }
+}
+
+// ── Strategy ──────────────────────────────────────────────────────────────────
+async function loadStrategy() {
+  // Timing
+  let timing;
+  try { timing = await apiFetch('/api/stats/timing'); }
+  catch(e) { timing = []; }
+
+  if (timing.length) {
+    drawChart('chartTiming', {
+      labels: timing.map(t => t.slot),
+      datasets: [{
+        label: 'Score medio por hora', data: timing.map(t => t.avg_score),
+        backgroundColor: timing.map(t => t.avg_score >= Math.max(...timing.map(x=>x.avg_score))*.8
+          ? 'rgba(62,207,142,.7)' : 'rgba(79,142,247,.5)'),
+      }]
+    }, 'bar');
+  }
+
+  // Analysis text from latest report
+  if (currentReport?.analysis_text) {
+    document.getElementById('analysisText').textContent = currentReport.analysis_text;
+    document.getElementById('analysisCard').style.display = '';
+  } else if (allReports.length) {
+    try {
+      const d = await apiFetch('/api/reports/' + allReports[0].date);
+      if (d.analysis_text) {
+        document.getElementById('analysisText').textContent = d.analysis_text;
+        document.getElementById('analysisCard').style.display = '';
+      }
+    } catch(e) {}
+  }
+}
+
+// ── Chart helper ──────────────────────────────────────────────────────────────
+function drawChart(canvasId, data, type = 'line') {
+  if (charts[canvasId]) { charts[canvasId].destroy(); }
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  charts[canvasId] = new Chart(ctx, {
+    type,
+    data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#2e3347' } },
+        y: { ticks: { color: '#64748b', font: { size: 11 } }, grid: { color: '#2e3347' } },
+      },
+    },
+  });
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
