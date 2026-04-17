@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@defensagob · Dashboard X</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --navy: #002b5c; --navy-dark: #001a3a; --navy-mid: #1a4a7a;
+  --gold: #c8a951; --gold-light: #f0d060;
+  --light-blue: #e8f0f8; --bg: #f1f4f8; --card: #ffffff;
+  --text: #1c2b3a; --muted: #5a6a7a; --border: #d0dbe8;
+  --green: #1d7a48; --red: #8b1a1a; --orange: #b35800;
+  --shadow: 0 2px 8px rgba(0,43,92,0.10);
+  --a-vicky: #059669; --a-fernando: #2563eb; --a-mariajose: #d97706;
+  --a-amparo: #7c3aed; --a-jonathan: #0891b2; --a-none: #9ca3af;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+/* ── TOOLBAR ─────────────────────────────────────── */
+.toolbar {
+  position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(135deg, var(--navy-dark), var(--navy));
+  border-bottom: 3px solid var(--gold);
+  padding: 0 24px; display: flex; align-items: center; gap: 16px;
+  height: 58px; min-height: 58px; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.toolbar-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.toolbar-brand .emblem { font-size: 22px; }
+.toolbar-brand .title { color: white; font-weight: 700; font-size: 15px; line-height: 1.1; }
+.toolbar-brand .sub { color: rgba(255,255,255,0.55); font-size: 11px; }
+.toolbar-status { color: rgba(255,255,255,0.6); font-size: 11px; white-space: nowrap; flex-shrink: 0; margin-left: 4px; }
+.filter-row { display: flex; gap: 4px; align-items: center; flex: 1; flex-wrap: wrap; justify-content: center; }
+.filter-btn {
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.75); padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.filter-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+.filter-btn.active { background: var(--gold); border-color: var(--gold); color: var(--navy-dark); font-weight: 700; }
+.filter-btn .count { background: rgba(0,0,0,0.2); border-radius: 10px; padding: 1px 5px; font-size: 10px; margin-left: 4px; }
+.filter-btn.active .count { background: rgba(0,43,92,0.3); }
+.load-btn {
+  background: rgba(200,169,81,0.2); border: 1px solid var(--gold); color: var(--gold);
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all .15s;
+}
+.load-btn:hover { background: var(--gold); color: var(--navy-dark); }
+
+/* ── EMPTY / NO DATA ─────────────────────────────── */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 58px); gap: 16px; padding: 40px 24px; text-align: center; }
+.empty-icon { font-size: 64px; line-height: 1; }
+.empty-state h2 { font-size: 22px; color: var(--navy); }
+.empty-state p { color: var(--muted); max-width: 480px; line-height: 1.6; }
+.empty-state code { background: var(--light-blue); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.load-btn-big { margin-top: 8px; background: var(--navy); color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: var(--shadow); transition: background .15s; }
+.load-btn-big:hover { background: var(--navy-mid); }
+.no-data-msg { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 58px); gap: 12px; text-align: center; padding: 40px; }
+.no-data-msg h3 { color: var(--navy); font-size: 18px; }
+.no-data-msg p { color: var(--muted); }
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.container { max-width: 1280px; margin: 0 auto; padding: 24px 20px 56px; }
+.section { margin-bottom: 28px; }
+.section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--navy); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid var(--navy); display: flex; align-items: center; gap: 6px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── KPI CARDS ──────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: var(--shadow); border-top: 4px solid var(--navy); }
+.kpi-card.gold { border-top-color: var(--gold); }
+.kpi-card.green { border-top-color: var(--green); }
+.kpi-card.mid { border-top-color: var(--navy-mid); }
+.kpi-card.red { border-top-color: var(--red); }
+.kpi-card.score { border-top-color: #7c3aed; }
+.kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); font-weight: 600; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--navy); margin: 4px 0 2px; line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--muted); }
+.kpi-sub.up { color: var(--green); font-weight: 600; }
+.kpi-sub.down { color: var(--red); font-weight: 600; }
+.range-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--light-blue); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--navy); font-weight: 600; margin-bottom: 16px; }
+
+/* ── CHART CARDS ────────────────────────────────── */
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: var(--shadow); }
+.chart-card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--navy); font-weight: 700; margin-bottom: 12px; }
+
+/* ── AUTHOR BADGES ──────────────────────────────── */
+.author-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 700; color: white; white-space: nowrap; vertical-align: middle;
+}
+.author-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; margin-right: 4px; }
+
+/* ── AUTHOR BEST CARDS ──────────────────────────── */
+.best-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.best-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
+.best-card-header { padding: 10px 14px; color: white; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.best-card-body { padding: 12px 14px; }
+.best-card-title { font-size: 12px; font-weight: 600; color: var(--navy); margin-bottom: 4px; line-height: 1.3; }
+.best-card-date { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+.best-card-score { font-size: 24px; font-weight: 700; color: var(--navy); }
+.best-card-score span { font-size: 11px; font-weight: 400; color: var(--muted); }
+.best-card-metrics { display: flex; gap: 12px; margin-top: 6px; font-size: 11px; color: var(--muted); }
+.best-card-metrics strong { color: var(--text); }
+.best-card-none { padding: 20px 14px; color: var(--muted); font-size: 12px; font-style: italic; }
+
+/* ── TABLES ──────────────────────────────────────── */
+table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
+thead { background: var(--navy); color: white; }
+thead th { padding: 10px 12px; font-size: 11px; font-weight: 600; text-align: left; letter-spacing: .3px; }
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--light-blue); }
+tbody td { padding: 9px 12px; font-size: 12px; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.bold { font-weight: 700; color: var(--navy); }
+.badge-rt { background: var(--navy-mid); color: white; font-size: 9px; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+.badge-best { background: var(--gold); color: var(--navy-dark); font-size: 9px; padding: 1px 6px; border-radius: 8px; font-weight: 700; }
+
+/* ── TABS ────────────────────────────────────────── */
+.tabs-bar { display: flex; gap: 4px; margin-bottom: 12px; }
+.tab-btn { background: var(--light-blue); border: 1px solid var(--border); color: var(--navy); padding: 6px 16px; border-radius: 6px 6px 0 0; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.tab-btn:hover { background: var(--border); }
+.tab-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+/* ── TONE LEGEND ─────────────────────────────────── */
+.tone-legend { display: flex; flex-direction: column; gap: 8px; }
+.tone-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.tone-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.tone-na { color: var(--muted); font-style: italic; font-size: 12px; padding: 20px 0; }
+
+/* ── INTEL CARDS (alerts + recs) ─────────────────── */
+.intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.intel-card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+.intel-card-header { padding: 10px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: white; }
+.intel-card-body { padding: 14px 16px; font-size: 12px; line-height: 1.7; color: var(--text); max-height: 340px; overflow-y: auto; }
+.intel-card-body strong { color: var(--navy); }
+.intel-card-body .rec-item { display: block; padding: 4px 0; border-bottom: 1px solid var(--light-blue); }
+.intel-card-body .rec-item:last-child { border-bottom: none; }
+.intel-card-body .alert-item { display: block; padding: 3px 0; }
+.intel-no-data { color: var(--muted); font-style: italic; font-size: 12px; padding: 16px; }
+
+/* ── ACCOUNT TABLE ───────────────────────────────── */
+.tone-mini { display: flex; gap: 2px; }
+.tone-pip { width: 8px; height: 8px; border-radius: 2px; }
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 900px) {
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .two-col, .three-col, .intel-grid { grid-template-columns: 1fr; }
+  .toolbar { flex-wrap: wrap; height: auto; padding: 10px 16px; }
+  .filter-row { justify-content: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-brand">
+    <span class="emblem">🛡️</span>
+    <div>
+      <div class="title">@defensagob · Dashboard X</div>
+      <div class="sub">Ministerio de Defensa</div>
+    </div>
+  </div>
+  <div class="toolbar-status" id="statusText">Sin datos</div>
+  <div class="filter-row" id="filterRow"></div>
+  <button class="load-btn" id="loadBtn" onclick="loadReports()">📂 Cargar datos</button>
+</div>
+
+<!-- EMPTY STATE -->
+<div id="emptyState">
+  <div class="empty-state">
+    <div class="empty-icon">📁</div>
+    <h2>Carga los informes para comenzar</h2>
+    <p>Pulsa el botón y selecciona la carpeta <code>Claude</code> (o directamente <code>Informes_X</code> si prefieres cargar solo los informes).<br>
+    Se leerán automáticamente todos los informes diarios y el ranking de autores.</p>
+    <button class="load-btn-big" onclick="loadReports()">📂 Seleccionar carpeta</button>
+    <input type="file" id="folderInput" multiple accept=".md" webkitdirectory style="display:none" onchange="handleFileInput(event)">
+    <p style="font-size:11px;margin-top:8px;color:var(--muted)">Compatible con Chrome y Edge.</p>
+  </div>
+</div>
+
+<!-- NO DATA IN RANGE -->
+<div id="noDataMsg" style="display:none">
+  <div class="no-data-msg">
+    <div style="font-size:48px">📭</div>
+    <h3>Sin informes en este periodo</h3>
+    <p id="noDataSub">Prueba con un rango de fechas más amplio.</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none">
+<div class="container">
+
+  <!-- RANGE + KPIs -->
+  <div class="section">
+    <div id="rangeBadge" class="range-badge"></div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+  </div>
+
+  <!-- AUTHOR RANKING -->
+  <div class="section" id="sectionAutores">
+    <div class="section-title">👥 Ranking de autores</div>
+    <div class="two-col">
+      <div class="chart-card">
+        <h3>📊 Score acumulado por autor</h3>
+        <div style="position:relative;height:220px"><canvas id="chartAutores"></canvas></div>
+      </div>
+      <div id="authorTableContainer"></div>
+    </div>
+  </div>
+
+  <!-- BEST POST PER AUTHOR -->
+  <div class="section" id="sectionBestPosts">
+    <div class="section-title">🥇 Mejor post por autor</div>
+    <div id="bestPostsContainer"></div>
+  </div>
+
+  <!-- CHARTS ROW 1: Views + Engagement -->
+  <div class="section">
+    <div class="two-col">
+      <div class="chart-card">
+        <h3>📈 Visualizaciones por día</h3>
+        <div style="position:relative;height:230px"><canvas id="chartViews"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>💙 Engagement diario — likes y reposts</h3>
+        <div style="position:relative;height:230px"><canvas id="chartEngagement"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2: Tone + Seguidores -->
+  <div class="section">
+    <div class="two-col">
+      <div class="chart-card">
+        <h3>🗣️ Tono de comentarios</h3>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div style="position:relative;height:190px;width:190px;flex-shrink:0"><canvas id="chartTone"></canvas></div>
+          <div id="toneLegend" class="tone-legend"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>👥 Evolución de seguidores</h3>
+        <div style="position:relative;height:190px"><canvas id="chartSeguidores"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 3: Score evolution -->
+  <div class="section">
+    <div class="chart-card">
+      <h3>⭐ Score medio por día</h3>
+      <div style="position:relative;height:200px"><canvas id="chartScore"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TOP POSTS (tabbed) -->
+  <div class="section">
+    <div class="section-title">🏆 Top posts</div>
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTopTab('views',this)">Por visualizaciones</button>
+      <button class="tab-btn" onclick="switchTopTab('likes',this)">Por likes</button>
+      <button class="tab-btn" onclick="switchTopTab('score',this)">Por score</button>
+    </div>
+    <div id="topPostsContainer"></div>
+  </div>
+
+  <!-- RECURRING ACCOUNTS -->
+  <div class="section">
+    <div class="section-title">🔁 Cuentas recurrentes en comentarios</div>
+    <div id="accountsContainer"></div>
+  </div>
+
+  <!-- ALERTS + RECOMMENDATIONS -->
+  <div class="section">
+    <div class="section-title">🧠 Inteligencia y análisis (informe más reciente)</div>
+    <div class="intel-grid" id="intelGrid"></div>
+  </div>
+
+  <!-- DAY TABLE -->
+  <div class="section">
+    <div class="section-title">📋 Resumen por día</div>
+    <div id="dayTableContainer"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════
+const FILTERS = [
+  { id: 'semana',  label: 'Última semana',   days: 7   },
+  { id: '15dias',  label: 'Últimos 15 días', days: 15  },
+  { id: 'mes',     label: 'Último mes',      days: 30  },
+  { id: '3meses',  label: 'Últimos 3 meses', days: 90  },
+  { id: 'año',     label: 'Último año',      days: 365 },
+  { id: 'siempre', label: 'Desde siempre',   days: null},
+];
+const MONTHS_ES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const AUTHOR_COLORS = {
+  'Vicky':      '#059669',
+  'Fernando':   '#2563eb',
+  'Maria José': '#d97706',
+  'Amparo':     '#7c3aed',
+  'Jonathan':   '#0891b2',
+  'Sin asignar':'#9ca3af'
+};
+const KNOWN_AUTHORS = ['Vicky','Fernando','Maria José','Amparo','Jonathan'];
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let allReports = [];
+let currentFilter = null;
+let activeCharts = {};
+let lastLoaded = null;
+let currentTopTab = 'views';
+let cachedTopPosts = [];
+
+// ════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════
+function parseNum(raw) {
+  if (!raw) return 0;
+  const s = String(raw).trim();
+  if (s === '—' || s === 'N/D' || s === 'N/A' || s === '') return 0;
+  const milMatch = s.match(/^([\d,]+)\s*mil$/i);
+  if (milMatch) return Math.round(parseFloat(milMatch[1].replace(',','.')) * 1000);
+  return parseInt(s.replace(/\./g,'').replace(',','.')) || 0;
+}
+function fmtNum(n) { if (n == null || isNaN(n)) return '0'; return Math.round(n).toLocaleString('es-ES'); }
+function fmtDec(n) { if (n == null || isNaN(n)) return '0'; return Number(n).toFixed(1); }
+function fmtDate(d) { return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`; }
+function fmtDateLong(d) { return `${d.getDate()} de ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][d.getMonth()]} de ${d.getFullYear()}`; }
+
+function normalizeAuthor(raw) {
+  if (!raw) return null;
+  const s = raw.replace(/[\[\]]/g,'').trim();
+  if (!s || /^por\s*asignar$/i.test(s) || s === '—' || s === '') return null;
+  if (/^(jony|jonathan)/i.test(s)) return 'Jonathan';
+  if (/^(maria\s*jos[eé]|mariajose|mj|institucional)/i.test(s)) return 'Maria José';
+  if (/^vicky/i.test(s)) return 'Vicky';
+  if (/^fernando/i.test(s)) return 'Fernando';
+  if (/^amparo/i.test(s)) return 'Amparo';
+  return s;
+}
+
+function authorColor(name) { return AUTHOR_COLORS[name] || AUTHOR_COLORS['Sin asignar']; }
+
+function authorBadge(name) {
+  const color = authorColor(name || 'Sin asignar');
+  const label = name || 'Sin asignar';
+  return `<span class="author-badge" style="background:${color}">${label}</span>`;
+}
+
+function mdToHtml(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/^(\d+)\.\s+/gm, (_,n) => `<span class="rec-num" style="color:var(--navy);font-weight:700">${n}.</span> `)
+    .replace(/^[-–•]\s+/gm, '• ')
+    .replace(/\n{2,}/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function extractSection(content, keyword) {
+  const parts = content.split(/\n(?=###\s)/);
+  for (const part of parts) {
+    if (part.toLowerCase().includes(keyword.toLowerCase())) {
+      return part.replace(/^###[^\n]*\n/, '').trim();
+    }
+  }
+  return null;
+}
+
+// ════════════════════════════════════════════════════
+// REPORT PARSING
+// ════════════════════════════════════════════════════
+function parseReport(filename, content) {
+  const dateMatch = filename.match(/informe-diario-(\d{4}-\d{2}-\d{2})\.md/i);
+  if (!dateMatch) return null;
+  const captureDate = new Date(dateMatch[1] + 'T12:00:00');
+  const reportDate  = new Date(captureDate);
+  reportDate.setDate(reportDate.getDate() - 1);
+  const lines = content.split('\n');
+
+  // ── Profile metrics ───────────────────────────────
+  let seguidores = 0, siguiendo = 0, postsPublicados = 0;
+  for (const line of lines) {
+    const sm = line.match(/\|\s*Seguidores\s*\|\s*([^|]+)\|/i);       if (sm) seguidores = parseNum(sm[1]);
+    const sigm = line.match(/\|\s*Siguiendo\s*\|\s*([^|]+)\|/i);      if (sigm) siguiendo = parseNum(sigm[1]);
+    const pm = line.match(/\|\s*Posts\s+publicados\s*\|\s*([^|]+)\|/i); if (pm) postsPublicados = parseNum(pm[1]);
+  }
+
+  // ── Posts ─────────────────────────────────────────
+  const posts = [];
+  let currentTitle = '', currentIsRT = false, currentAutor = null, currentScore = null;
+  let awaitingMetrics = false, skipSeparator = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const hdrMatch = line.match(/^###\s+((?:Post|RT)\s*\d+|Retweet\b)/i);
+    if (hdrMatch) {
+      currentTitle = line.replace(/^###\s*/,'').replace(/\*\([^)]*\)\*/g,'').trim();
+      currentIsRT  = /retweet|\[repost\]|^RT\s*\d+/i.test(currentTitle);
+      currentAutor = null; currentScore = null;
+      continue;
+    }
+    const autorMatch = line.match(/^\*\*Autor:\*\*\s*(.+)/i);
+    if (autorMatch) { currentAutor = normalizeAuthor(autorMatch[1]); continue; }
+    const scoreMatch = line.match(/^\*\*Score:\*\*\s*([\d.]+)/i);
+    if (scoreMatch) { currentScore = parseFloat(scoreMatch[1]); continue; }
+
+    if (!awaitingMetrics && line.toLowerCase().includes('respuestas') && line.toLowerCase().includes('visualizaciones') && line.includes('|')) {
+      awaitingMetrics = true; skipSeparator = false; continue;
+    }
+    if (awaitingMetrics) {
+      if (!skipSeparator && line.match(/^\|[\s\-|:]+\|/)) { skipSeparator = true; continue; }
+      if (line.includes('|')) {
+        const cells = line.split('|').map(v => v.trim()).filter(v => v !== '');
+        if (cells.length >= 4) {
+          const resp = parseNum(cells[0]), rep = parseNum(cells[1]),
+                likes = parseNum(cells[2]), grd = parseNum(cells[3]), views = parseNum(cells[4]||'0');
+          const score = currentScore != null ? currentScore :
+            +(likes*3 + rep*2 + grd*2 + resp*1 + views/100).toFixed(1);
+          posts.push({ title: currentTitle||'Sin título', isRT: currentIsRT,
+            autor: currentAutor, score,
+            respuestas: resp, reposts: rep, likes, guardados: grd, views,
+            reportDate: new Date(reportDate) });
+        }
+        awaitingMetrics = false; skipSeparator = false; continue;
+      }
+      if (!line.trim().startsWith('|') && line.trim() !== '') awaitingMetrics = false;
+    }
+  }
+
+  // ── Comment tone ──────────────────────────────────
+  let pos = 0, neg = 0, spam = 0, neutral = 0;
+  const accounts = {};
+  for (const line of lines) {
+    if (!line.includes('|') || !line.includes('@')) continue;
+    if (line.includes('🟢')) pos++;
+    if (line.includes('🔴')) neg++;
+    if (line.includes('⚠️')) spam++;
+    if (line.includes('⚪')) neutral++;
+    const cells = line.split('|').map(v => v.trim()).filter(Boolean);
+    if (cells.length >= 3) {
+      const uMatch = cells[0].match(/@(\w+)/);
+      if (uMatch) {
+        const u = '@' + uMatch[1];
+        if (!accounts[u]) accounts[u] = { count:0, pos:0, neg:0, spam:0, neutral:0 };
+        accounts[u].count++;
+        const tone = cells[cells.length-1];
+        if (tone.includes('🟢')) accounts[u].pos++;
+        else if (tone.includes('🔴')) accounts[u].neg++;
+        else if (tone.includes('⚠️')) accounts[u].spam++;
+        else accounts[u].neutral++;
+      }
+    }
+  }
+
+  // ── Intelligence sections ──────────────────────────
+  const alerts      = extractSection(content, 'Alertas y riesgos');
+  const suggestions = extractSection(content, 'Sugerencias de contenido');
+  const strategic   = extractSection(content, 'Análisis estratégico');
+  const timing      = extractSection(content, 'Análisis de timing');
+
+  return {
+    filename, captureDate, reportDate,
+    seguidores, siguiendo, postsPublicados,
+    posts,
+    totalViews:   posts.reduce((s,p) => s+p.views, 0),
+    totalLikes:   posts.reduce((s,p) => s+p.likes, 0),
+    totalReposts: posts.reduce((s,p) => s+p.reposts, 0),
+    totalResp:    posts.reduce((s,p) => s+p.respuestas, 0),
+    totalScore:   posts.reduce((s,p) => s+p.score, 0),
+    avgScore:     posts.length ? +(posts.reduce((s,p) => s+p.score, 0)/posts.length).toFixed(1) : 0,
+    ownPosts:     posts.filter(p => !p.isRT).length,
+    rtPosts:      posts.filter(p =>  p.isRT).length,
+    pos, neg, spam, neutral,
+    hasCommentData: (pos+neg+spam+neutral) > 0,
+    accounts, alerts, suggestions, strategic, timing
+  };
+}
+
+// ════════════════════════════════════════════════════
+// AUTHOR STATS
+// ════════════════════════════════════════════════════
+function computeAuthorStats(reports) {
+  const stats = {};
+  for (const r of reports) {
+    for (const p of r.posts) {
+      const a = p.autor || 'Sin asignar';
+      if (!stats[a]) stats[a] = { posts:0, totalScore:0, totalLikes:0, totalReposts:0, totalViews:0, totalGuardados:0, bestPost:null };
+      const s = stats[a];
+      s.posts++;
+      s.totalScore  += p.score;
+      s.totalLikes  += p.likes;
+      s.totalReposts += p.reposts;
+      s.totalViews  += p.views;
+      s.totalGuardados += p.guardados;
+      if (!s.bestPost || p.score > s.bestPost.score) s.bestPost = {...p, captureDate: r.captureDate};
+    }
+  }
+  // compute averages
+  for (const a of Object.keys(stats)) {
+    stats[a].avgScore = stats[a].posts ? +(stats[a].totalScore / stats[a].posts).toFixed(1) : 0;
+  }
+  return stats;
+}
+
+// ════════════════════════════════════════════════════
+// RECURRING ACCOUNTS
+// ════════════════════════════════════════════════════
+function computeRecurringAccounts(reports) {
+  const merged = {};
+  for (const r of reports) {
+    for (const [u, data] of Object.entries(r.accounts)) {
+      if (!merged[u]) merged[u] = { count:0, days:0, pos:0, neg:0, spam:0, neutral:0 };
+      merged[u].count += data.count;
+      merged[u].days++;
+      merged[u].pos     += data.pos;
+      merged[u].neg     += data.neg;
+      merged[u].spam    += data.spam;
+      merged[u].neutral += data.neutral;
+    }
+  }
+  return Object.entries(merged)
+    .map(([username, d]) => ({ username, ...d }))
+    .sort((a,b) => b.count - a.count || b.days - a.days)
+    .slice(0, 15);
+}
+
+// ════════════════════════════════════════════════════
+// FILE LOADING
+// ════════════════════════════════════════════════════
+async function loadReports() {
+  if ('showDirectoryPicker' in window) {
+    try {
+      const dirHandle = await window.showDirectoryPicker({ id: 'claude_folder', mode: 'read' });
+      let informesHandle = dirHandle;
+      // Try to navigate into Informes_X subfolder
+      try { informesHandle = await dirHandle.getDirectoryHandle('Informes_X'); } catch(e) {}
+
+      const reports = [];
+      for await (const [name, handle] of informesHandle.entries()) {
+        if (handle.kind === 'file' && /^informe-diario-\d{4}-\d{2}-\d{2}\.md$/i.test(name)) {
+          const file = await handle.getFile();
+          const content = await file.text();
+          const report = parseReport(name, content);
+          if (report) reports.push(report);
+        }
+      }
+      processReports(reports);
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      document.getElementById('folderInput').click();
+    }
+  } else {
+    document.getElementById('folderInput').click();
+  }
+}
+
+function handleFileInput(event) {
+  const files = Array.from(event.target.files).filter(f => /^informe-diario-\d{4}-\d{2}-\d{2}\.md$/i.test(f.name));
+  Promise.all(files.map(f => f.text().then(c => parseReport(f.name, c))))
+    .then(results => processReports(results.filter(Boolean)));
+}
+
+function processReports(reports) {
+  reports.sort((a,b) => a.reportDate - b.reportDate);
+  allReports = reports;
+  lastLoaded = new Date();
+  updateFilterButtons();
+  if (currentFilter === null && allReports.length > 0) {
+    setFilter(null);
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.days === 'null'));
+  } else {
+    setFilter(currentFilter);
+  }
+}
+
+// ════════════════════════════════════════════════════
+// FILTERING
+// ════════════════════════════════════════════════════
+function getFiltered(days) {
+  if (!days) return allReports;
+  const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate()-days);
+  return allReports.filter(r => r.reportDate >= cutoff);
+}
+function countInRange(days) { return getFiltered(days).length; }
+function buildFilterButtons() {
+  const row = document.getElementById('filterRow'); row.innerHTML = '';
+  FILTERS.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn'; btn.dataset.days = String(f.days);
+    btn.innerHTML = f.label + `<span class="count" id="cnt-${f.id}">0</span>`;
+    btn.onclick = () => setFilter(f.days); row.appendChild(btn);
+  });
+}
+function updateFilterButtons() { FILTERS.forEach(f => { const c = document.getElementById(`cnt-${f.id}`); if(c) c.textContent = countInRange(f.days); }); }
+function setFilter(days) {
+  currentFilter = days;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', String(b.dataset.days) === String(days)));
+  renderDashboard(getFiltered(days), days);
+}
+
+// ════════════════════════════════════════════════════
+// TOP POSTS TAB
+// ════════════════════════════════════════════════════
+function switchTopTab(tab, btn) {
+  currentTopTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTopPostsTable(cachedTopPosts);
+}
+
+// ════════════════════════════════════════════════════
+// MAIN RENDER
+// ════════════════════════════════════════════════════
+function renderDashboard(reports, days) {
+  document.getElementById('emptyState').style.display = 'none';
+  if (reports.length === 0) {
+    document.getElementById('dashboard').style.display  = 'none';
+    document.getElementById('noDataMsg').style.display  = 'block';
+    const oldest = allReports.length ? ` El informe más reciente es del ${fmtDateLong(allReports[allReports.length-1].reportDate)}.` : '';
+    document.getElementById('noDataSub').textContent = 'Prueba con un rango más amplio.' + oldest;
+    updateStatus(); return;
+  }
+  document.getElementById('noDataMsg').style.display  = 'none';
+  document.getElementById('dashboard').style.display  = 'block';
+
+  const authorStats = computeAuthorStats(reports);
+
+  renderRangeBadge(reports, days);
+  renderKPIs(reports, authorStats);
+  renderAuthorRanking(reports, authorStats);
+  renderBestPostPerAuthor(authorStats);
+  renderViewsChart(reports);
+  renderEngagementChart(reports);
+  renderToneChart(reports);
+  renderSeguidoresChart(reports);
+  renderScoreChart(reports);
+  renderTopPosts(reports);
+  renderRecurringAccounts(reports);
+  renderIntelSection(reports);
+  renderDayTable(reports, authorStats);
+  updateStatus();
+}
+
+function updateStatus() {
+  const el = document.getElementById('statusText');
+  if (!allReports.length) { el.textContent = 'Sin datos'; return; }
+  const t = lastLoaded;
+  el.textContent = `${allReports.length} informes · cargados ${t.getHours()}:${String(t.getMinutes()).padStart(2,'0')}h`;
+}
+
+// ════════════════════════════════════════════════════
+// RANGE BADGE
+// ════════════════════════════════════════════════════
+function renderRangeBadge(reports, days) {
+  const first = reports[0].reportDate, last = reports[reports.length-1].reportDate;
+  const label = days ? FILTERS.find(f=>f.days===days)?.label : 'Desde siempre';
+  document.getElementById('rangeBadge').innerHTML = `📅 <strong>${label}</strong> &nbsp;·&nbsp; ${fmtDate(first)} – ${fmtDate(last)} &nbsp;·&nbsp; ${reports.length} días`;
+}
+
+// ════════════════════════════════════════════════════
+// KPI CARDS
+// ════════════════════════════════════════════════════
+function renderKPIs(reports, authorStats) {
+  const allPosts   = reports.flatMap(r => r.posts);
+  const totalViews = allPosts.reduce((s,p) => s+p.views,  0);
+  const totalLikes = allPosts.reduce((s,p) => s+p.likes,  0);
+  const totalReps  = allPosts.reduce((s,p) => s+p.reposts,0);
+  const ownPosts   = allPosts.filter(p => !p.isRT).length;
+  const rtPosts    = allPosts.filter(p =>  p.isRT).length;
+  const avgViews   = reports.length ? Math.round(totalViews/reports.length) : 0;
+  const avgScore   = allPosts.length ? +(allPosts.reduce((s,p)=>s+p.score,0)/allPosts.length).toFixed(1) : 0;
+  const first = reports[0], last = reports[reports.length-1];
+  const segDiff = (first && last) ? last.seguidores - first.seguidores : 0;
+  // Best author by score
+  const sorted = Object.entries(authorStats).filter(([a])=>a!=='Sin asignar').sort((a,b)=>b[1].totalScore-a[1].totalScore);
+  const topAuthor = sorted[0] ? sorted[0][0] : '—';
+  const topAuthorScore = sorted[0] ? fmtDec(sorted[0][1].totalScore) : '—';
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Visualizaciones</div><div class="kpi-value">${fmtNum(totalViews)}</div><div class="kpi-sub">Media ${fmtNum(avgViews)}/día</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Likes totales</div><div class="kpi-value">${fmtNum(totalLikes)}</div><div class="kpi-sub">${fmtNum(totalReps)} reposts</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Publicaciones</div><div class="kpi-value">${ownPosts+rtPosts}</div><div class="kpi-sub">${ownPosts} propias · ${rtPosts} retweets</div></div>
+    <div class="kpi-card mid"><div class="kpi-label">Seguidores (último)</div><div class="kpi-value">${last ? fmtNum(last.seguidores) : '—'}</div><div class="kpi-sub ${segDiff>=0?'up':'down'}">${segDiff>=0?'+':''}${fmtNum(segDiff)} en el periodo</div></div>
+    <div class="kpi-card score"><div class="kpi-label">Score medio/post</div><div class="kpi-value">${fmtDec(avgScore)}</div><div class="kpi-sub">pts por publicación</div></div>
+    <div class="kpi-card red"><div class="kpi-label">🏅 Autor líder</div><div class="kpi-value" style="font-size:17px">${topAuthor}</div><div class="kpi-sub">${topAuthorScore} pts acumulados</div></div>
+  `;
+}
+
+// ════════════════════════════════════════════════════
+// AUTHOR RANKING
+// ════════════════════════════════════════════════════
+function renderAuthorRanking(reports, authorStats) {
+  const entries = Object.entries(authorStats).sort((a,b) => b[1].totalScore - a[1].totalScore);
+  if (!entries.length) {
+    document.getElementById('sectionAutores').style.display = 'none'; return;
+  }
+  document.getElementById('sectionAutores').style.display = '';
+
+  // Chart
+  destroyChart('autores');
+  const known = entries.filter(([a]) => a !== 'Sin asignar');
+  if (known.length) {
+    activeCharts['autores'] = new Chart(document.getElementById('chartAutores'), {
+      type: 'bar',
+      data: {
+        labels: known.map(([a]) => a),
+        datasets: [{
+          label: 'Score total',
+          data: known.map(([,s]) => s.totalScore),
+          backgroundColor: known.map(([a]) => authorColor(a)),
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: ctx => ` ${fmtDec(ctx.raw)} pts` } } },
+        scales: {
+          x: { beginAtZero:true, ticks:{ font:{size:10}, color:'#5a6a7a' } },
+          y: { ticks:{ font:{size:11}, color:'#1c2b3a', fontWeight:'600' }, grid:{display:false} }
+        }
+      }
+    });
+  }
+
+  // Table
+  let html = `<table><thead><tr>
+    <th>#</th><th>Autor</th><th class="num">Posts</th><th class="num">Score total</th>
+    <th class="num">Media/post</th><th class="num">Likes</th><th class="num">Reposts</th><th class="num">Visualizaciones</th>
+  </tr></thead><tbody>`;
+  entries.forEach(([autor, s], i) => {
+    const dot = `<span class="author-dot" style="background:${authorColor(autor)}"></span>`;
+    html += `<tr ${i===0&&autor!=='Sin asignar'?'style="background:#fffbea"':''}>
+      <td><strong>${i+1}</strong>${i===0&&autor!=='Sin asignar'?' <span class="badge-best">🏆</span>':''}</td>
+      <td>${dot}<strong>${autor}</strong></td>
+      <td class="num">${s.posts}</td>
+      <td class="num"><strong>${fmtDec(s.totalScore)}</strong></td>
+      <td class="num">${fmtDec(s.avgScore)}</td>
+      <td class="num">${fmtNum(s.totalLikes)}</td>
+      <td class="num">${fmtNum(s.totalReposts)}</td>
+      <td class="num">${fmtNum(s.totalViews)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('authorTableContainer').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════
+// BEST POST PER AUTHOR
+// ════════════════════════════════════════════════════
+function renderBestPostPerAuthor(authorStats) {
+  const entries = Object.entries(authorStats).filter(([a,s]) => a !== 'Sin asignar' && s.bestPost);
+  if (!entries.length) {
+    document.getElementById('sectionBestPosts').style.display = 'none'; return;
+  }
+  document.getElementById('sectionBestPosts').style.display = '';
+
+  const cards = entries.sort((a,b) => b[1].bestPost.score - a[1].bestPost.score).map(([autor, s]) => {
+    const p = s.bestPost;
+    const color = authorColor(autor);
+    const title = p.title.replace(/^Post\s*\d+\s*[—-]\s*/i,'').replace(/^RT\s*\d+\s*[—-]\s*/i,'').substring(0,60);
+    return `<div class="best-card">
+      <div class="best-card-header" style="background:${color}">
+        <span>👤</span> ${autor}
+      </div>
+      <div class="best-card-body">
+        <div class="best-card-title">${title}${p.title.length>60?'…':''}</div>
+        <div class="best-card-date">📅 ${fmtDateLong(p.reportDate)}</div>
+        <div class="best-card-score">${fmtDec(p.score)} <span>pts score</span></div>
+        <div class="best-card-metrics">
+          <div>❤️ <strong>${fmtNum(p.likes)}</strong> likes</div>
+          <div>🔁 <strong>${fmtNum(p.reposts)}</strong> rep.</div>
+          <div>👁️ <strong>${fmtNum(p.views)}</strong> vis.</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('bestPostsContainer').innerHTML = `<div class="best-cards-grid">${cards}</div>`;
+}
+
+// ════════════════════════════════════════════════════
+// CHART HELPERS
+// ════════════════════════════════════════════════════
+function destroyChart(id) { if (activeCharts[id]) { activeCharts[id].destroy(); delete activeCharts[id]; } }
+const BASE_OPTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+  scales: {
+    x: { ticks: { font:{size:10}, maxRotation:45, color:'#5a6a7a' }, grid:{display:false} },
+    y: { beginAtZero: true, ticks: { font:{size:10}, color:'#5a6a7a' } }
+  }
+};
+
+// ── Views ─
+function renderViewsChart(reports) {
+  destroyChart('views');
+  const data = reports.map(r => r.totalViews), max = Math.max(...data);
+  activeCharts['views'] = new Chart(document.getElementById('chartViews'), {
+    type:'bar', data:{ labels: reports.map(r=>fmtDate(r.reportDate)),
+      datasets:[{ label:'Visualizaciones', data, borderRadius:4,
+        backgroundColor: data.map(v=>v===max?'#c8a951':'#a8c4e0'),
+        borderColor: data.map(v=>v===max?'#a07830':'#1a4a7a'), borderWidth:1 }]},
+    options:{...BASE_OPTS, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${fmtNum(ctx.raw)} views`}}},
+      scales:{...BASE_OPTS.scales, y:{...BASE_OPTS.scales.y, ticks:{...BASE_OPTS.scales.y.ticks, callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}}}
+  });
+}
+
+// ── Engagement ─
+function renderEngagementChart(reports) {
+  destroyChart('engagement');
+  activeCharts['engagement'] = new Chart(document.getElementById('chartEngagement'), {
+    type:'bar', data:{ labels: reports.map(r=>fmtDate(r.reportDate)),
+      datasets:[
+        { label:'Likes',   data: reports.map(r=>r.totalLikes),   backgroundColor:'#002b5c', borderRadius:4 },
+        { label:'Reposts', data: reports.map(r=>r.totalReposts), backgroundColor:'#c8a951', borderRadius:4 }
+      ]},
+    options:{...BASE_OPTS, plugins:{legend:{display:true,position:'top',labels:{font:{size:10},boxWidth:12}}}}
+  });
+}
+
+// ── Tone donut ─
+function renderToneChart(reports) {
+  destroyChart('tone');
+  const pos=reports.reduce((s,r)=>s+r.pos,0), neg=reports.reduce((s,r)=>s+r.neg,0),
+        spam=reports.reduce((s,r)=>s+r.spam,0), neut=reports.reduce((s,r)=>s+r.neutral,0);
+  const total=pos+neg+spam+neut, legendEl=document.getElementById('toneLegend');
+  if (!total) {
+    document.getElementById('chartTone').style.display='none';
+    legendEl.innerHTML='<div class="tone-na">Sin datos de comentarios.</div>'; return;
+  }
+  document.getElementById('chartTone').style.display='';
+  const pct=n=>total?Math.round(n/total*100):0;
+  legendEl.innerHTML=`
+    <div class="tone-item"><div class="tone-dot" style="background:#1d7a48"></div> 🟢 Positivo — <strong>${pos}</strong> (${pct(pos)}%)</div>
+    <div class="tone-item"><div class="tone-dot" style="background:#8b1a1a"></div> 🔴 Negativo — <strong>${neg}</strong> (${pct(neg)}%)</div>
+    <div class="tone-item"><div class="tone-dot" style="background:#b35800"></div> ⚠️ Spam — <strong>${spam}</strong> (${pct(spam)}%)</div>
+    <div class="tone-item"><div class="tone-dot" style="background:#7f8c8d"></div> ⚪ Indeterminado — <strong>${neut}</strong> (${pct(neut)}%)</div>
+    <div style="margin-top:8px;font-size:11px;color:var(--muted)">Total: ${total} comentarios</div>`;
+  activeCharts['tone'] = new Chart(document.getElementById('chartTone'), {
+    type:'doughnut', data:{ labels:['Positivo','Negativo','Spam','Indeterminado'],
+      datasets:[{data:[pos,neg,spam,neut], backgroundColor:['#1d7a48','#8b1a1a','#b35800','#7f8c8d'], borderColor:'#fff', borderWidth:3}]},
+    options:{responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{display:false}}}
+  });
+}
+
+// ── Seguidores ─
+function renderSeguidoresChart(reports) {
+  destroyChart('seguidores');
+  if (reports.length < 2) {
+    const parent = document.getElementById('chartSeguidores').parentElement;
+    parent.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:190px;color:var(--muted);font-size:13px">${reports.length===1?`<div style="text-align:center"><div style="font-size:32px;font-weight:700;color:var(--navy)">${fmtNum(reports[0].seguidores)}</div><div>seguidores</div></div>`:'Sin datos suficientes'}</div>`;
+    return;
+  }
+  activeCharts['seguidores'] = new Chart(document.getElementById('chartSeguidores'), {
+    type:'line', data:{ labels: reports.map(r=>fmtDate(r.captureDate)),
+      datasets:[{ data: reports.map(r=>r.seguidores), borderColor:'#002b5c', backgroundColor:'rgba(0,43,92,0.07)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#002b5c', fill:true, tension:0.3 }]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmtNum(ctx.raw)} seguidores`}}},
+      scales:{x:{ticks:{font:{size:10},color:'#5a6a7a'},grid:{display:false}}, y:{ticks:{font:{size:10},color:'#5a6a7a', callback:v=>fmtNum(v)}, grace:'5%'}}}
+  });
+}
+
+// ── Score por día ─
+function renderScoreChart(reports) {
+  destroyChart('score');
+  const data = reports.map(r => r.avgScore), max = Math.max(...data);
+  activeCharts['score'] = new Chart(document.getElementById('chartScore'), {
+    type:'line', data:{ labels: reports.map(r=>fmtDate(r.reportDate)),
+      datasets:[{ label:'Score medio', data, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.07)', borderWidth:2, pointRadius:5,
+        pointBackgroundColor: data.map(v => v===max ? '#7c3aed' : '#c4b5fd'),
+        pointBorderColor: data.map(v => v===max ? '#5b21b6' : '#7c3aed'),
+        fill:true, tension:0.3 }]},
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${fmtDec(ctx.raw)} pts`}}},
+      scales:{x:{ticks:{font:{size:10},maxRotation:45,color:'#5a6a7a'},grid:{display:false}},
+        y:{beginAtZero:true, ticks:{font:{size:10},color:'#5a6a7a'}}}}
+  });
+}
+
+// ════════════════════════════════════════════════════
+// TOP POSTS
+// ════════════════════════════════════════════════════
+function renderTopPosts(reports) {
+  cachedTopPosts = reports.flatMap(r => r.posts);
+  renderTopPostsTable(cachedTopPosts);
+}
+
+function renderTopPostsTable(allPosts) {
+  const sortKey = currentTopTab === 'views' ? 'views' : currentTopTab === 'likes' ? 'likes' : 'score';
+  const icon    = currentTopTab === 'views' ? '👁️' : currentTopTab === 'likes' ? '❤️' : '⭐';
+  const top = [...allPosts].sort((a,b) => b[sortKey] - a[sortKey]).slice(0, 10);
+  if (!top.length) { document.getElementById('topPostsContainer').innerHTML='<p style="color:var(--muted);font-size:13px;padding:8px">Sin datos.</p>'; return; }
+  const maxVal = top[0][sortKey];
+  let html = `<table><thead><tr>
+    <th>#</th><th>Fecha</th><th>Autor</th><th>Publicación</th><th>Tipo</th>
+    <th class="num">${icon} ${sortKey==='score'?'Score':sortKey==='likes'?'Likes':'Views'}</th>
+    <th class="num">❤️ Likes</th><th class="num">🔁 Rep.</th><th class="num">👁️ Views</th><th class="num">⭐ Score</th>
+  </tr></thead><tbody>`;
+  top.forEach((p,i) => {
+    const isTop = i===0;
+    const title = p.title.replace(/^Post\s*\d+\s*[—-]\s*/i,'').replace(/^RT\s*\d+\s*[—-]\s*/i,'').substring(0,55);
+    html += `<tr ${isTop?'style="background:#fffbea"':''}>
+      <td><strong>${i+1}</strong>${isTop?' <span class="badge-best">🏆</span>':''}</td>
+      <td>${fmtDate(p.reportDate)}</td>
+      <td>${p.autor ? authorBadge(p.autor) : '<span style="color:var(--muted);font-size:11px">—</span>'}</td>
+      <td style="max-width:280px;font-size:12px">${title}${p.title.length>55?'…':''}</td>
+      <td>${p.isRT?'<span class="badge-rt">RT</span>':'📄'}</td>
+      <td class="num"><strong>${sortKey==='score'?fmtDec(p[sortKey]):fmtNum(p[sortKey])}</strong>
+        <div style="height:3px;background:#e0e0e0;border-radius:2px;margin-top:3px">
+          <div style="height:3px;background:${isTop?'#c8a951':'#1a4a7a'};border-radius:2px;width:${Math.round(p[sortKey]/maxVal*100)}%"></div>
+        </div>
+      </td>
+      <td class="num">${fmtNum(p.likes)}</td>
+      <td class="num">${fmtNum(p.reposts)}</td>
+      <td class="num">${fmtNum(p.views)}</td>
+      <td class="num">${fmtDec(p.score)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('topPostsContainer').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════
+// RECURRING ACCOUNTS
+// ════════════════════════════════════════════════════
+function renderRecurringAccounts(reports) {
+  const accounts = computeRecurringAccounts(reports).filter(a => a.count > 1);
+  if (!accounts.length) {
+    document.getElementById('accountsContainer').innerHTML = '<p style="color:var(--muted);font-size:12px;font-style:italic;padding:8px">Sin cuentas con apariciones múltiples en el periodo seleccionado.</p>'; return;
+  }
+  let html = `<table><thead><tr>
+    <th>#</th><th>Cuenta</th>
+    <th class="num">Apariciones</th><th class="num">Días</th>
+    <th class="num">🟢 Pos.</th><th class="num">🔴 Neg.</th><th class="num">⚪ Ind.</th>
+    <th>Tono dominante</th>
+  </tr></thead><tbody>`;
+  accounts.forEach((a,i) => {
+    const dom = a.neg >= a.pos && a.neg > 0 ? '🔴 Hostil' : a.pos > a.neg && a.pos > 0 ? '🟢 Positivo' : a.spam > 0 ? '⚠️ Spam' : '⚪ Indeterminado';
+    const domColor = a.neg >= a.pos && a.neg > 0 ? '#8b1a1a' : a.pos > a.neg && a.pos > 0 ? '#1d7a48' : '#7f8c8d';
+    html += `<tr>
+      <td><strong>${i+1}</strong></td>
+      <td><a href="https://x.com/${a.username.replace('@','')}" target="_blank" style="color:var(--navy-mid);font-weight:600;text-decoration:none">${a.username}</a></td>
+      <td class="num"><strong>${a.count}</strong></td>
+      <td class="num">${a.days}</td>
+      <td class="num">${a.pos||'—'}</td>
+      <td class="num">${a.neg||'—'}</td>
+      <td class="num">${a.neutral||'—'}</td>
+      <td><span style="color:${domColor};font-weight:600;font-size:11px">${dom}</span></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('accountsContainer').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════
+// INTEL SECTION (alerts + recommendations + strategic)
+// ════════════════════════════════════════════════════
+function renderIntelSection(reports) {
+  // Use latest report that has recommendations
+  const withRecs = [...reports].reverse().find(r => r.suggestions || r.alerts || r.strategic || r.timing);
+  const grid = document.getElementById('intelGrid');
+  if (!withRecs) {
+    grid.innerHTML = '<p class="intel-no-data">Sin datos de análisis. Los informes generados con el nuevo formato incluirán esta sección automáticamente.</p>'; return;
+  }
+  const date = fmtDateLong(withRecs.reportDate);
+  const cards = [
+    { icon:'💡', title:'Sugerencias de contenido', text: withRecs.suggestions, color:'#059669' },
+    { icon:'⚠️', title:'Alertas y riesgos',        text: withRecs.alerts,      color:'#b45309' },
+    { icon:'🎯', title:'Análisis estratégico',      text: withRecs.strategic,   color:'#002b5c' },
+    { icon:'⏰', title:'Análisis de timing',        text: withRecs.timing,      color:'#0891b2' },
+  ].filter(c => c.text);
+
+  if (!cards.length) {
+    grid.innerHTML = '<p class="intel-no-data">Sin datos de análisis en el informe más reciente.</p>'; return;
+  }
+  grid.innerHTML = cards.map(c => `
+    <div class="intel-card">
+      <div class="intel-card-header" style="background:${c.color}">${c.icon} ${c.title} <span style="font-size:10px;opacity:0.75;font-weight:400;margin-left:6px">(${date})</span></div>
+      <div class="intel-card-body">${mdToHtml(c.text)}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════
+// DAY TABLE
+// ════════════════════════════════════════════════════
+function renderDayTable(reports, authorStats) {
+  if (!reports.length) { document.getElementById('dayTableContainer').innerHTML=''; return; }
+  const maxViews = Math.max(...reports.map(r => r.totalViews));
+  let html = `<table><thead><tr>
+    <th>Día analizado</th>
+    <th class="num">Posts</th><th class="num">RTs</th>
+    <th class="num">Views</th><th class="num">Likes</th><th class="num">Reposts</th>
+    <th class="num">Score medio</th><th>Autores</th><th>Post destacado</th>
+  </tr></thead><tbody>`;
+  [...reports].reverse().forEach(r => {
+    const best = r.posts.reduce((a,b) => (b.views>(a?.views||0)?b:a), null);
+    const bestTitle = best ? best.title.replace(/^Post\s*\d+\s*[—-]\s*/i,'').substring(0,45) : '—';
+    // Collect author badges for this day
+    const dayAuthors = [...new Set(r.posts.map(p=>p.autor).filter(Boolean))];
+    const authorBadges = dayAuthors.map(a => authorBadge(a)).join(' ') || '<span style="color:var(--muted);font-size:11px">Sin asignar</span>';
+    html += `<tr>
+      <td class="bold">${fmtDateLong(r.reportDate)}</td>
+      <td class="num">${r.ownPosts}</td>
+      <td class="num">${r.rtPosts}</td>
+      <td class="num">
+        <strong>${fmtNum(r.totalViews)}</strong>
+        <div style="height:3px;background:#e0e0e0;border-radius:2px;margin-top:2px">
+          <div style="height:3px;background:#1a4a7a;border-radius:2px;width:${r.totalViews?Math.round(r.totalViews/maxViews*100):0}%"></div>
+        </div>
+      </td>
+      <td class="num">${fmtNum(r.totalLikes)}</td>
+      <td class="num">${fmtNum(r.totalReposts)}</td>
+      <td class="num"><strong>${fmtDec(r.avgScore)}</strong></td>
+      <td>${authorBadges}</td>
+      <td style="font-size:11px;color:var(--muted)">${bestTitle}${best&&best.title.length>45?'…':''}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('dayTableContainer').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+buildFilterButtons();
+</script>
+</body>
+</html>

@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>@defensagob · Estadísticas X · Marzo 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #002b5c;
+    --navy-dark: #001a3a;
+    --navy-mid: #1a4a7a;
+    --gold: #c8a951;
+    --light-blue: #e8f0f8;
+    --bg: #f1f4f8;
+    --card: #ffffff;
+    --text: #1c2b3a;
+    --muted: #5a6a7a;
+    --green: #1d7a48;
+    --green-bg: #eaf7ee;
+    --red: #8b1a1a;
+    --red-bg: #fceaea;
+    --orange: #b35800;
+    --orange-bg: #fef4e4;
+    --gray-bg: #f5f5f5;
+    --border: #d0dbe8;
+    --shadow: 0 2px 8px rgba(0,43,92,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-mid) 100%);
+    color: white;
+    padding: 32px 40px 28px;
+    display: flex; align-items: center; gap: 28px;
+    border-bottom: 4px solid var(--gold);
+  }
+  .header-emblem {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; flex-shrink: 0;
+  }
+  .header-text h1 { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+  .header-text h2 { font-size: 14px; font-weight: 400; opacity: 0.75; margin-top: 4px; }
+  .header-text .periodo {
+    display: inline-block; margin-top: 8px;
+    background: rgba(200,169,81,0.25); border: 1px solid var(--gold);
+    color: var(--gold); padding: 3px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  }
+  .header-meta { margin-left: auto; text-align: right; font-size: 12px; opacity: 0.65; }
+
+  /* LAYOUT */
+  .container { max-width: 1200px; margin: 0 auto; padding: 28px 24px 48px; }
+  .section { margin-bottom: 36px; }
+  .section-title {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.2px; color: var(--navy); margin-bottom: 14px;
+    padding-bottom: 8px; border-bottom: 2px solid var(--navy);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title .icon { font-size: 16px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .kpi-card {
+    background: var(--card); border-radius: 8px;
+    border: 1px solid var(--border); padding: 20px 20px 16px;
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--navy);
+  }
+  .kpi-card.gold { border-top-color: var(--gold); }
+  .kpi-card.green { border-top-color: var(--green); }
+  .kpi-card.mid { border-top-color: var(--navy-mid); }
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 600; }
+  .kpi-value { font-size: 32px; font-weight: 700; color: var(--navy); margin: 6px 0 2px; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: var(--muted); }
+
+  /* PROFILE TABLE */
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow); }
+  thead { background: var(--navy); color: white; }
+  thead th { padding: 11px 16px; font-size: 12px; font-weight: 600; text-align: left; letter-spacing: 0.4px; }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--light-blue); }
+  tbody td { padding: 10px 16px; font-size: 13px; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bold { font-weight: 700; color: var(--navy); }
+
+  /* TWO COLUMNS */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* CHART CARDS */
+  .chart-card {
+    background: var(--card); border-radius: 8px;
+    border: 1px solid var(--border); padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .chart-card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--navy); font-weight: 700; margin-bottom: 16px; }
+  .chart-wrapper { position: relative; }
+
+  /* DAY CARDS */
+  .day-card {
+    background: var(--card); border-radius: 8px;
+    border: 1px solid var(--border); margin-bottom: 20px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .day-header {
+    background: var(--navy); color: white;
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .day-header h3 { font-size: 14px; font-weight: 700; }
+  .day-header .day-meta { font-size: 12px; opacity: 0.75; }
+  .day-badges { display: flex; gap: 8px; }
+  .badge {
+    padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  }
+  .day-body { padding: 16px 20px 20px; }
+
+  /* POST ROW */
+  .post-row {
+    border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .post-row:last-child { margin-bottom: 0; }
+  .post-header {
+    background: var(--light-blue); padding: 9px 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .post-title { font-weight: 600; font-size: 13px; color: var(--navy); flex: 1; }
+  .post-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .post-format {
+    font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+    background: var(--navy); color: white; white-space: nowrap;
+  }
+  .post-format.rt { background: var(--navy-mid); }
+  .post-text { padding: 10px 14px; font-size: 12px; color: var(--muted); font-style: italic; border-bottom: 1px solid var(--border); }
+  .post-metrics { display: grid; grid-template-columns: repeat(5,1fr); }
+  .metric-cell {
+    padding: 10px 14px; text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .metric-cell:last-child { border-right: none; }
+  .metric-val { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .metric-val.large { color: var(--gold); }
+  .metric-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-top: 2px; }
+
+  /* COMMENTS */
+  .comments-section { padding: 10px 14px; background: var(--bg); border-top: 1px solid var(--border); }
+  .comments-section h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 8px; }
+  .comment-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 7px; padding: 8px 10px; border-radius: 5px; background: var(--card); border: 1px solid var(--border); }
+  .comment-row:last-child { margin-bottom: 0; }
+  .tone-badge { font-size: 16px; flex-shrink: 0; line-height: 1; margin-top: 1px; }
+  .comment-body { flex: 1; }
+  .comment-user { font-weight: 700; font-size: 12px; color: var(--navy-mid); }
+  .comment-text { font-size: 12px; color: var(--text); margin-top: 2px; }
+  .comment-likes { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .comment-row.pos { border-left: 3px solid var(--green); }
+  .comment-row.neg { border-left: 3px solid var(--red); }
+  .comment-row.spam { border-left: 3px solid var(--orange); }
+  .comment-row.ind { border-left: 3px solid #aaa; }
+
+  /* TONE LEGEND */
+  .tone-legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tone-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .tone-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ANALYSIS BOX */
+  .analysis-box {
+    background: var(--light-blue); border: 1px solid var(--border);
+    border-left: 4px solid var(--navy); border-radius: 6px;
+    padding: 14px 16px; font-size: 13px; line-height: 1.6; color: var(--text);
+    margin-top: 16px;
+  }
+  .analysis-box strong { color: var(--navy); }
+
+  /* ALERT NOTE */
+  .alert-note {
+    background: #fff8e1; border: 1px solid #f0d060; border-left: 4px solid #c8a951;
+    border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #5c4a00; margin-top: 8px;
+  }
+
+  /* NO COMMENTS */
+  .no-comments { font-size: 12px; color: var(--muted); font-style: italic; padding: 8px 14px; }
+
+  /* FOOTER */
+  .footer {
+    background: var(--navy-dark); color: rgba(255,255,255,0.55);
+    text-align: center; padding: 16px; font-size: 11px;
+    border-top: 2px solid var(--gold);
+    margin-top: 20px;
+  }
+
+  /* BEST POST HIGHLIGHT */
+  .best-post { background: #fffbea; border: 1px solid #f0d060; }
+  .best-label {
+    background: var(--gold); color: white;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* DAY SUMMARY ROW */
+  .day-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
+  .day-sum-item { text-align: center; padding: 10px; background: var(--bg); border-radius: 6px; border: 1px solid var(--border); }
+  .day-sum-val { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .day-sum-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-top: 2px; }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: repeat(2,1fr); }
+    .two-col { grid-template-columns: 1fr; }
+    .three-col { grid-template-columns: 1fr; }
+    .post-metrics { grid-template-columns: repeat(3,1fr); }
+    .day-summary { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-emblem">🛡️</div>
+  <div class="header-text">
+    <h1>@defensagob · Estadísticas X</h1>
+    <h2>Ministerio de Defensa — Cuenta Oficial</h2>
+    <span class="periodo">23 – 29 de marzo de 2026</span>
+  </div>
+  <div class="header-meta">
+    Generado el 30/03/2026<br>4 días con datos
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KPIs RESUMEN -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📊</span> Resumen ejecutivo del periodo</div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Seguidores (última captura)</div>
+        <div class="kpi-value">479.322</div>
+        <div class="kpi-sub">+122 vs. primera captura</div>
+      </div>
+      <div class="kpi-card gold">
+        <div class="kpi-label">Total visualizaciones</div>
+        <div class="kpi-value">238K+</div>
+        <div class="kpi-sub">Posts propios + retweets</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Publicaciones totales</div>
+        <div class="kpi-value">21</div>
+        <div class="kpi-sub">12 propias · 9 retweets/citas</div>
+      </div>
+      <div class="kpi-card mid">
+        <div class="kpi-label">Comentarios analizados</div>
+        <div class="kpi-value">56</div>
+        <div class="kpi-sub">En días con acceso (23, 24, 29 mar)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVOLUCIÓN PERFIL -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📈</span> Evolución del perfil</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha captura</th>
+          <th>Datos de actividad del día anterior</th>
+          <th class="num">Seguidores</th>
+          <th class="num">Siguiendo</th>
+          <th class="num">Posts publicados</th>
+          <th class="num">Variación seguidores</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">24 mar 2026 · 10:12 h</td>
+          <td>23 de marzo (4 posts)</td>
+          <td class="num">479.200</td>
+          <td class="num">338</td>
+          <td class="num">32.800</td>
+          <td class="num">—</td>
+        </tr>
+        <tr>
+          <td class="bold">25 mar 2026 · 08:10 h</td>
+          <td>24 de marzo (7 publicaciones)</td>
+          <td class="num">479.326</td>
+          <td class="num">338</td>
+          <td class="num">32.896</td>
+          <td class="num" style="color:var(--green)">+126</td>
+        </tr>
+        <tr>
+          <td class="bold">26 mar 2026 · 08:17 h</td>
+          <td>25 de marzo (7 publicaciones)</td>
+          <td class="num">479.336</td>
+          <td class="num">338</td>
+          <td class="num">32.904</td>
+          <td class="num" style="color:var(--green)">+10</td>
+        </tr>
+        <tr>
+          <td class="bold">30 mar 2026 · 09:26 h</td>
+          <td>29 de marzo (3 publicaciones)</td>
+          <td class="num">479.322</td>
+          <td class="num">338</td>
+          <td class="num">32.920</td>
+          <td class="num" style="color:var(--red)">−14</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- GRÁFICAS COMPARATIVAS -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📉</span> Comparativa diaria de engagement</div>
+    <div class="two-col">
+      <div class="chart-card">
+        <h3>Visualizaciones totales por día</h3>
+        <div class="chart-wrapper" style="height:260px">
+          <canvas id="chartViews"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Likes y Reposts por día</h3>
+        <div class="chart-wrapper" style="height:260px">
+          <canvas id="chartEngagement"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="two-col" style="margin-top:20px">
+      <div class="chart-card">
+        <h3>Distribución de tono en comentarios (días 23, 24 y 29 mar)</h3>
+        <div style="display:flex; align-items:center; gap:24px">
+          <div class="chart-wrapper" style="height:220px; width:220px; flex-shrink:0">
+            <canvas id="chartTone"></canvas>
+          </div>
+          <div>
+            <div class="tone-legend" style="flex-direction:column; gap:10px">
+              <div class="tone-item"><div class="tone-dot" style="background:#1d7a48"></div> 🟢 Positivo / Informativo — <strong>19 comentarios (34%)</strong></div>
+              <div class="tone-item"><div class="tone-dot" style="background:#8b1a1a"></div> 🔴 Negativo / Hostil — <strong>21 comentarios (37%)</strong></div>
+              <div class="tone-item"><div class="tone-dot" style="background:#b35800"></div> ⚠️ Spam / Desinformación — <strong>2 comentarios (4%)</strong></div>
+              <div class="tone-item"><div class="tone-dot" style="background:#7f8c8d"></div> ⚪ Indeterminado — <strong>14 comentarios (25%)</strong></div>
+            </div>
+            <div class="analysis-box" style="margin-top:12px; font-size:12px">
+              El día <strong>24 de marzo</strong> concentra el grueso del tono negativo, impulsado por el post sobre la carrera militar como <strong>profesión de riesgo (#COPERFAS)</strong>, que generó 47 respuestas y 83.607 visualizaciones.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Publicaciones por tipo y día</h3>
+        <div class="chart-wrapper" style="height:220px">
+          <canvas id="chartPosts"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA COMPARATIVA -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📋</span> Tabla comparativa de días</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Día analizado</th>
+          <th class="num">Posts propios</th>
+          <th class="num">Retweets/Citas</th>
+          <th class="num">Total views</th>
+          <th class="num">Total likes</th>
+          <th class="num">Total reposts</th>
+          <th>Post más visto</th>
+          <th class="num">Comentarios analizados</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="bold">23 marzo 2026</td>
+          <td class="num">4</td>
+          <td class="num">0</td>
+          <td class="num">15.986</td>
+          <td class="num">276</td>
+          <td class="num">75</td>
+          <td>Op. Atalanta (5.082V)</td>
+          <td class="num">5</td>
+        </tr>
+        <tr style="background:#fffbea">
+          <td class="bold">24 marzo 2026</td>
+          <td class="num">6</td>
+          <td class="num">1</td>
+          <td class="num bold" style="color:var(--gold)">138.846</td>
+          <td class="num bold" style="color:var(--gold)">1.531</td>
+          <td class="num">390</td>
+          <td>🏆 <strong>#COPERFAS</strong> (83.607V)</td>
+          <td class="num">45</td>
+        </tr>
+        <tr>
+          <td class="bold">25 marzo 2026</td>
+          <td class="num">4</td>
+          <td class="num">3</td>
+          <td class="num">52.970</td>
+          <td class="num">847</td>
+          <td class="num">189</td>
+          <td>RT UME La Gomera (14.159V)</td>
+          <td class="num" style="color:var(--muted); font-style:italic">No accesibles</td>
+        </tr>
+        <tr>
+          <td class="bold">29 marzo 2026</td>
+          <td class="num">2</td>
+          <td class="num">1</td>
+          <td class="num">31.745</td>
+          <td class="num">406</td>
+          <td class="num">120</td>
+          <td>RT UME Sierra Espuña (23.019V)</td>
+          <td class="num">6</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="alert-note">⚠️ Los datos del <strong>25 de marzo</strong> incluyen 3 retweets de @UMEgob con alta visibilidad. Los comentarios de ese día no fueron accesibles por limitaciones técnicas de nitter.net.</div>
+  </div>
+
+  <!-- ======================== DÍA 23 MARZO ======================== -->
+  <div class="section">
+    <div class="section-title"><span class="icon">📅</span> Detalle de publicaciones por día</div>
+
+    <div class="day-card">
+      <div class="day-header">
+        <div>
+          <h3>Lunes 23 de marzo de 2026</h3>
+          <div class="day-meta">4 posts propios · 15.986 visualizaciones totales</div>
+        </div>
+        <div class="day-badges">
+          <span class="badge">📍 ColdResponse26</span>
+          <span class="badge">📍 Op. Atalanta</span>
+          <span class="badge">📍 Incirlik/OTAN</span>
+        </div>
+      </div>
+      <div class="day-body">
+        <div class="day-summary">
+          <div class="day-sum-item"><div class="day-sum-val">276</div><div class="day-sum-lbl">Likes</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">75</div><div class="day-sum-lbl">Reposts</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">13</div><div class="day-sum-lbl">Respuestas</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">15.986</div><div class="day-sum-lbl">Visualizaciones</div></div>
+        </div>
+
+        <!-- Post 1 -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 1 — Misión cumplida en #ColdResponse26 (Ártico noruego)</span>
+            <span class="post-time">09:02 h</span>
+            <span class="post-format">🎥 Vídeo</span>
+          </div>
+          <div class="post-text">🫡 ¡Misión cumplida en #ColdResponse26! ❄️ Ha finalizado en el Ártico noruego uno de los ejercicios más duros. Tropas de Montaña del @EjercitoTierra, operaron con +14 países demostrando disciplina, compañerismo y superación en frío extremo.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">5</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">29</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">83</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">6</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">4.643</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="no-comments">⚠️ Comentarios no accesibles en nitter (limitación por vídeo HLS)</div>
+        </div>
+
+        <!-- Post 2 -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 2 — Defensa antiaérea: visita acuartelamiento 'Capitán Guiloche' (Hilo 1/2)</span>
+            <span class="post-time">13:04 h</span>
+            <span class="post-format">📷 Fotos</span>
+          </div>
+          <div class="post-text">🛡️ Defensa antiaérea, desde Madrid hasta Incirlik. La ministra visita el acuartelamiento 'Capitán Guiloche', sede del Mando de Artillería Antiaérea.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">6</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">17</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">70</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">3</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">4.360</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios analizados (4 de 6)</h4>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@MadMadmaxbcn</div><div class="comment-text">«Aprovechando para cerrar contratos y conseguir mordidas para el PSOE y sus intereses personales ministra? […] Quieren que nos invada Marruecos»</div><div class="comment-likes">6 likes</div></div></div>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@floridotoquito</div><div class="comment-text">«Auténticos profesionales 24/7»</div><div class="comment-likes">3 likes</div></div></div>
+            <div class="comment-row spam"><div class="tone-badge">⚠️</div><div class="comment-body"><div class="comment-user">@EuroGhost3</div><div class="comment-text">«Свободу Народной Республике Нарва! Freedom for the People's Republic of Narva! [propaganda multilingüe pro-rusa, ~15 idiomas]»</div><div class="comment-likes">2 likes · <em>Posible actor de influencia</em></div></div></div>
+            <div class="comment-row ind"><div class="tone-badge">⚪</div><div class="comment-body"><div class="comment-user">@DeCastroviejo</div><div class="comment-text"><em>[Imagen adjunta sin texto — sin clasificar]</em></div><div class="comment-likes">— likes</div></div></div>
+          </div>
+        </div>
+
+        <!-- Post 3 -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 3 — 138 militares operan batería Patriot en Incirlik (Hilo 2/2)</span>
+            <span class="post-time">13:06 h</span>
+            <span class="post-format">📷 Fotos</span>
+          </div>
+          <div class="post-text">📡 138 militares del @EjercitoTierra operan una batería #Patriot en la Base Aérea de Incirlik proporcionando defensa contra misiles y drones 24/7.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">0</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">12</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">29</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">1</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">1.901</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="no-comments"><em>Sin comentarios (segunda parte de hilo).</em></div>
+        </div>
+
+        <!-- Post 4 -->
+        <div class="post-row best-post">
+          <div class="post-header" style="background:#fef9e7; border-bottom:1px solid #f0d060">
+            <span class="post-title" style="color:var(--navy)">Post 4 — Refuerzo aéreo en el Índico: Delta 4 en Operación Atalanta</span>
+            <span class="post-time">19:01 h</span>
+            <span class="best-label">🏆 Mejor del día</span>
+            <span class="post-format">📷 Fotos</span>
+          </div>
+          <div class="post-text">🛩️ ¡Refuerzo aéreo en el Índico! Un avión Delta 4 del @EjercitoAire se incorpora al Destacamento Aerotáctico 'Orión' en la operación @EUNAVFOR Atalanta.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">2</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">17</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val large">94</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">2</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val large">5.082</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios analizados (1 de 2)</h4>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@Web_AME (Aeronaves Militares Españolas)</div><div class="comment-text">«El #DATOrion 🇪🇸 del @EjercitoAire con su ✈️ D.4 desde Yibuti #OperacionAtalanta — [enlace a documentación histórica sobre el Destacamento Orión]»</div><div class="comment-likes">106 likes · <strong>Comentario más viral del día</strong></div></div></div>
+          </div>
+        </div>
+
+        <div class="analysis-box">
+          <strong>Análisis 23 mar:</strong> Jornada equilibrada de 4 posts. El mayor rendimiento corresponde a la Operación Atalanta (5.082V, 94 ❤️). La visita ministerial a Artillería Antiaérea concentró la única presencia de spam (propaganda pro-rusa, @EuroGhost3) y el comentario político más agresivo del día, ambos con tracción mínima. No se detectan patrones coordinados.
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== DÍA 24 MARZO ======================== -->
+    <div class="day-card">
+      <div class="day-header" style="background: linear-gradient(135deg, #5a0000, #8b1a1a)">
+        <div>
+          <h3>Martes 24 de marzo de 2026</h3>
+          <div class="day-meta">6 posts propios + 1 retweet · 138.846 visualizaciones totales · ⚠️ Alto engagement negativo</div>
+        </div>
+        <div class="day-badges">
+          <span class="badge">📍 #COPERFAS</span>
+          <span class="badge">📍 #BorrascaTherese</span>
+          <span class="badge">📍 CL-215T Plus Ultra</span>
+        </div>
+      </div>
+      <div class="day-body">
+        <div class="day-summary">
+          <div class="day-sum-item"><div class="day-sum-val">1.531</div><div class="day-sum-lbl">Likes</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">390</div><div class="day-sum-lbl">Reposts</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">75</div><div class="day-sum-lbl">Respuestas</div></div>
+          <div class="day-sum-item" style="background:#fffbea; border-color:#f0d060"><div class="day-sum-val" style="color:var(--gold)">138.846</div><div class="day-sum-lbl">Visualizaciones</div></div>
+        </div>
+
+        <!-- Post 1 -->
+        <div class="post-row best-post">
+          <div class="post-header" style="background:#fef9e7; border-bottom:1px solid #f0d060">
+            <span class="post-title" style="color:var(--navy)">Post 1 — Centenario Plus Ultra: CL-215T ameriza en Gran Canaria</span>
+            <span class="post-time">09:56 h</span>
+            <span class="best-label">🥈 2.º más visto</span>
+            <span class="post-format">🎥 Vídeo</span>
+          </div>
+          <div class="post-text">🌊 El mismo mar, cien años después. ✈️ Un 'CL-215T' del @EjercitoAire amerizó en el Puerto de La Luz recreando la llegada del 'Plus Ultra' a Gran Canaria en 1926. #GrandesVuelos</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">5</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">33</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val large">221</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">—</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val large">11.079</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios (2 de 5 accesibles)</h4>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@IHaulBoxes</div><div class="comment-text">«How to tell the difference between a CL-215T and a CL-415?»</div><div class="comment-likes">1 like</div></div></div>
+            <div class="comment-row ind"><div class="tone-badge">⚪</div><div class="comment-body"><div class="comment-user">@2123_Tumblr</div><div class="comment-text">«anxious»</div><div class="comment-likes">— likes</div></div></div>
+          </div>
+        </div>
+
+        <!-- Post 2 - RT UME -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Retweet — @UMEgob sale hacia Gran Canaria por #BorrascaTherese</span>
+            <span class="post-time">~13:10 h</span>
+            <span class="post-format rt">🔁 Retweet</span>
+          </div>
+          <div class="post-text">Elemento de reconocimiento de la #UIEMCanarias salen desde Gando hacia @GranCanariaCab para paliar los efectos de la #BorrascaTherese.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">6</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">98</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val large">327</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">3</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val large">17.941</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="no-comments"><em>Comentarios no extraídos (retweet de @UMEgob).</em></div>
+        </div>
+
+        <!-- Post 3 - COPERFAS (estrella del día) -->
+        <div class="post-row" style="border:2px solid #c8a951">
+          <div class="post-header" style="background:var(--navy-dark)">
+            <span class="post-title">Post 3 — Carrera militar como profesión de riesgo (#COPERFAS)</span>
+            <span class="post-time">14:15 h</span>
+            <span class="best-label">🏆 Más visto del periodo</span>
+            <span class="post-format">📷 Foto</span>
+          </div>
+          <div class="post-text">El Ministerio de Defensa propondrá iniciar los trámites para la declaración de la carrera militar como profesión de riesgo, en el seno del Consejo de Personal de las Fuerzas Armadas #COPERFAS.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val large">47</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val large">130</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val large">547</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val large">36</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val large">83.607</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios analizados (35 de 47) — selección representativa</h4>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@AlonsoHolguinFJ</div><div class="comment-text">«Ya va siendo hora… ¿Y los #guardiasciviles ❓»</div><div class="comment-likes">17 likes</div></div></div>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@paconarud</div><div class="comment-text">«Desde @UMT_Tropa nos alegramos de esta noticia»</div><div class="comment-likes">2 likes</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@pepetandem</div><div class="comment-text">«Ya, claro. Farsantes.»</div><div class="comment-likes">6 likes</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@mitula47</div><div class="comment-text">«Sí claro no se lo conceden a policías y guardia civiles y se lo dan a Los militares, iros con el cuento a otra parte.»</div><div class="comment-likes">6 likes</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@kkrakkatoa</div><div class="comment-text">«Es de traca, se les concede profesión de riesgo a los ujieres del Congreso, y las profesiones de riesgo reales, a mirar para otro lado.»</div><div class="comment-likes">3 likes</div></div></div>
+            <div class="comment-row spam"><div class="tone-badge">⚠️</div><div class="comment-body"><div class="comment-user">@pakojones1919</div><div class="comment-text">«Podrían poner también vivir rodeado de pachos y moros como profesión de riesgo.»</div><div class="comment-likes">— likes · <em>Contenido xenófobo</em></div></div></div>
+            <div class="comment-row ind"><div class="tone-badge">⚪</div><div class="comment-body"><div class="comment-user">@Espball</div><div class="comment-text">«Los actores llevan décadas como profesión de riesgo. No es una broma.»</div><div class="comment-likes">23 likes · <em>Tono irónico, contexto ambiguo</em></div></div></div>
+            <div style="padding:6px 10px; font-size:11px; color:var(--muted); font-style:italic">… y 28 comentarios adicionales analizados (ver informe completo del 25/03/2026)</div>
+          </div>
+        </div>
+
+        <!-- Posts 4, 5, 6, 7 resumidos -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 4 — UIEMCanarias: achique en túnel de Arucas #BorrascaTherese</span>
+            <span class="post-time">15:38 h</span>
+            <span class="post-format">🎥 Vídeo</span>
+          </div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">6</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">76</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">206</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">8</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">16.471</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios (4 de 6)</h4>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@MarreroJavi</div><div class="comment-text">«Buen trabajo. Estamos en buenas manos»</div><div class="comment-likes">1 like</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@caar_melo</div><div class="comment-text">«Yo ponía a los ingenieros con cubo y fregona!!»</div><div class="comment-likes">1 like</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@yisus_delegado</div><div class="comment-text">«Ahí está la chapuza que hicieron los ingenieros tan bien pagados»</div><div class="comment-likes">— likes</div></div></div>
+            <div class="comment-row ind"><div class="tone-badge">⚪</div><div class="comment-body"><div class="comment-user">@calima50</div><div class="comment-text">«Los Cabildos canarios deben tener las debidas competencias sin estar a expensas del Ministerio de Defensa.»</div><div class="comment-likes">— likes</div></div></div>
+          </div>
+        </div>
+
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 5 — SEDEF @AmparoValcarce1 en jornada @garrigues_es</span>
+            <span class="post-time">17:56 h</span>
+            <span class="post-format">📷 Fotos</span>
+          </div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">3</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">5</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">18</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">4</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">2.186</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="no-comments"><em>1 respuesta visible (solo etiquetas, sin texto clasificable).</em></div>
+        </div>
+
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 6 — XXXIX Contingente Antártico: fin de campaña</span>
+            <span class="post-time">~19:10 h</span>
+            <span class="post-format">📹 Cita vídeo</span>
+          </div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">0</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">13</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">74</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">2</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">3.090</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="no-comments"><em>Sin comentarios.</em></div>
+        </div>
+
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 7 — UME: agradecimiento por apoyo en #BorrascaTherese</span>
+            <span class="post-time">21:06 h</span>
+            <span class="post-format">📹 Cita vídeo</span>
+          </div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">8</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">35</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">138</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">2</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">4.472</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios (6 de 8)</h4>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@eduardo_sucino</div><div class="comment-text">«Por el módico precio del salario mínimo.»</div><div class="comment-likes">1 like</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@redundan_cy</div><div class="comment-text">«Casi siempre... que en Valencia dejasteis a la gente abandonada a su suerte»</div><div class="comment-likes">— likes · <em>Referencia a DANA</em></div></div></div>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@azabache_cdf</div><div class="comment-text">«La UME no es a la carta. Gracias UME 👍🏻 SIEMPRE Azul y Verde 😉»</div><div class="comment-likes">— likes</div></div></div>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@gofio2000</div><div class="comment-text">«Siempre UME»</div><div class="comment-likes">— likes</div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@jssik</div><div class="comment-text">«Si fuera por ustedes... Los bomberos, la UME es España, ustedes unos vampiros asquerosos»</div><div class="comment-likes">2 likes</div></div></div>
+            <div class="comment-row ind"><div class="tone-badge">⚪</div><div class="comment-body"><div class="comment-user">@DRMontesquieu</div><div class="comment-text">«Mucho corazoncito....»</div><div class="comment-likes">— likes · <em>Tono irónico</em></div></div></div>
+          </div>
+        </div>
+
+        <div class="analysis-box">
+          <strong>Análisis 24 mar:</strong> Jornada récord del periodo con 138.846 visualizaciones. El post #COPERFAS dominó absolutamente el día (83.607V) con el debate sobre la exclusión de GC y PN. Se detectó un comentario xenófobo aislado (@pakojones1919) y el actor @EuroGhost3 (propaganda pro-rusa del día anterior sigue activo). Los posts de emergencia en Canarias generaron apoyo ciudadano mayoritario. Las críticas sobre la DANA aparecen recurrentemente en posts de la UME.
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================== DÍA 25 MARZO ======================== -->
+    <div class="day-card">
+      <div class="day-header">
+        <div>
+          <h3>Miércoles 25 de marzo de 2026</h3>
+          <div class="day-meta">4 posts propios + 3 retweets · 52.970 visualizaciones totales · ⚠️ Comentarios no accesibles</div>
+        </div>
+        <div class="day-badges">
+          <span class="badge">📍 #BorrascaTherese</span>
+          <span class="badge">📍 GIETMA Salamanca</span>
+          <span class="badge">📍 UME La Gomera</span>
+        </div>
+      </div>
+      <div class="day-body">
+        <div class="day-summary">
+          <div class="day-sum-item"><div class="day-sum-val">847</div><div class="day-sum-lbl">Likes</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">189</div><div class="day-sum-lbl">Reposts</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">24</div><div class="day-sum-lbl">Respuestas</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">52.970</div><div class="day-sum-lbl">Visualizaciones</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Publicación</th><th>Hora</th><th>Tipo</th><th class="num">Resp.</th><th class="num">RT</th><th class="num">Likes</th><th class="num">Guard.</th><th class="num">Views</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Centro Internacional de Desminado (Ejército de Tierra)</td><td>08:58 h</td><td>Vídeo</td><td class="num">1</td><td class="num">17</td><td class="num">43</td><td class="num">2</td><td class="num">3.545</td></tr>
+            <tr><td>2</td><td>Repliegue de la UME tras apoyo en Canarias</td><td>14:14 h</td><td>Vídeo</td><td class="num">6</td><td class="num">37</td><td class="num">178</td><td class="num">4</td><td class="num">12.787</td></tr>
+            <tr><td>3</td><td>Robles se reúne con SACEUR (Grynkewich)</td><td>15:58 h</td><td>Fotos</td><td class="num">2</td><td class="num">11</td><td class="num">49</td><td class="num">0</td><td class="num">2.935</td></tr>
+            <tr><td>4</td><td>Puesta de sol desde Cabo Fradera (Río Miño)</td><td>19:21 h</td><td>Foto</td><td class="num">0</td><td class="num">3</td><td class="num">38</td><td class="num">0</td><td class="num">1.311</td></tr>
+            <tr style="background:var(--light-blue)"><td>RT1</td><td>@UMEgob: UIEMCanarias hacia La Gomera #BorrascaTherese</td><td>20:57 h</td><td>RT Vídeo</td><td class="num">2</td><td class="num">63</td><td class="num">245</td><td class="num">5</td><td class="num">14.159</td></tr>
+            <tr style="background:var(--light-blue)"><td>RT2</td><td>@UMEgob: GIETMA tapona fuga GNL en Fuentes de Béjar</td><td>11:42 h</td><td>RT Fotos</td><td class="num">5</td><td class="num">32</td><td class="num">148</td><td class="num">7</td><td class="num">8.878</td></tr>
+            <tr style="background:var(--light-blue)"><td>RT3</td><td>@UMEgob: GIETMA y BIEM5 desplazados a Salamanca</td><td>09:30 h</td><td>RT Vídeo</td><td class="num">0</td><td class="num">26</td><td class="num">146</td><td class="num">5</td><td class="num">9.355</td></tr>
+          </tbody>
+        </table>
+        <div class="alert-note">⚠️ Los comentarios de todas las publicaciones del 25 de marzo no fueron accesibles. nitter.net devolvió "Tweet not found" de forma sistemática para todos los posts consultados. Las instancias alternativas (nitter.privacydev.net, xcancel.com) tampoco cargaron el contenido. Se recomienda autenticación en X para la extracción de comentarios en futuros informes.</div>
+      </div>
+    </div>
+
+    <!-- ======================== DÍA 29 MARZO ======================== -->
+    <div class="day-card">
+      <div class="day-header">
+        <div>
+          <h3>Domingo 29 de marzo de 2026</h3>
+          <div class="day-meta">2 posts propios + 1 retweet · 31.745 visualizaciones totales</div>
+        </div>
+        <div class="day-badges">
+          <span class="badge">📍 #IFSierraEspuña</span>
+          <span class="badge">📍 USAR Excarcelación</span>
+        </div>
+      </div>
+      <div class="day-body">
+        <div class="day-summary">
+          <div class="day-sum-item"><div class="day-sum-val">406</div><div class="day-sum-lbl">Likes</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">120</div><div class="day-sum-lbl">Reposts</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">9</div><div class="day-sum-lbl">Respuestas</div></div>
+          <div class="day-sum-item"><div class="day-sum-val">31.745</div><div class="day-sum-lbl">Visualizaciones</div></div>
+        </div>
+
+        <!-- Post 1 USAR -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 1 — Ejercicio USAR de excarcelación (UME + Ejército de Tierra)</span>
+            <span class="post-time">09:03 h</span>
+            <span class="post-format">🎥 Vídeo</span>
+          </div>
+          <div class="post-text">📽️ Trabajo técnico para la liberación de víctimas atrapadas. El equipo #USAR @UMEgob ha desarrollado un ejercicio de excarcelación junto al Regimiento #España_11 del @EjercitoTierra.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">4</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">14</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">75</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">4</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">6.852</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios (2 de 4)</h4>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@lovat1942</div><div class="comment-text">«Base Aérea de Zaragoza BIEM IV. Podemos ver el polígono USAR (terremotos) y las torres metálicas para el trabajo vertical con cuerdas de los especialistas MSAR.»</div><div class="comment-likes">61 likes · <em>Comentario técnico de alta calidad</em></div></div></div>
+            <div class="comment-row neg"><div class="tone-badge">🔴</div><div class="comment-body"><div class="comment-user">@comolatengotu</div><div class="comment-text">«A quien van a ayudar esos pobres… mejor para todos que se va a limitar la cosa, a las fotos y videos estupidos habituales»</div><div class="comment-likes">44 likes</div></div></div>
+          </div>
+        </div>
+
+        <!-- RT UME IFSierraEspuña -->
+        <div class="post-row best-post">
+          <div class="post-header" style="background:#fef9e7; border-bottom:1px solid #f0d060">
+            <span class="post-title" style="color:var(--navy)">Retweet — @UMEgob: Tercer Batallón desplegado en #IFSierraEspuña</span>
+            <span class="post-time">17:17 h</span>
+            <span class="best-label">🏆 Más visto del día</span>
+            <span class="post-format rt">🔁 Retweet</span>
+          </div>
+          <div class="post-text">🚨 Unidades del Tercer Batallón de Intervención de la @UMEgob han salido de la Base 'Jaime I' en Bétera para sumarse a los servicios de emergencias en el #IFSierraEspuña #Murcia @112rmurcia.</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">4</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val large">100</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val large">312</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">N/D</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val large">23.019</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="comments-section">
+            <h4>Comentarios del tweet original @UMEgob (3 visibles)</h4>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@Piruletadementa</div><div class="comment-text">«Gracias!!»</div><div class="comment-likes">716 likes</div></div></div>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@VGumbau</div><div class="comment-text">«Muchas suerte»</div><div class="comment-likes">321 likes</div></div></div>
+            <div class="comment-row pos"><div class="tone-badge">🟢</div><div class="comment-body"><div class="comment-user">@BenjaLopez1971</div><div class="comment-text">«Gracias»</div><div class="comment-likes">652 likes</div></div></div>
+          </div>
+        </div>
+
+        <!-- Post 3 Semana -->
+        <div class="post-row">
+          <div class="post-header">
+            <span class="post-title">Post 2 — Resumen semanal: hitos de la última semana de marzo</span>
+            <span class="post-time">19:00 h</span>
+            <span class="post-format">🎥 Vídeo</span>
+          </div>
+          <div class="post-text">💡 Conoce los hitos principales de nuestra última semana de marzo. 🤝🏻 Gracias por acompañarnos. #Conócenos #FuerzasArmadas</div>
+          <div class="post-metrics">
+            <div class="metric-cell"><div class="metric-val">1</div><div class="metric-lbl">Respuestas</div></div>
+            <div class="metric-cell"><div class="metric-val">6</div><div class="metric-lbl">Reposts</div></div>
+            <div class="metric-cell"><div class="metric-val">19</div><div class="metric-lbl">Likes</div></div>
+            <div class="metric-cell"><div class="metric-val">1</div><div class="metric-lbl">Guardados</div></div>
+            <div class="metric-cell"><div class="metric-val">1.874</div><div class="metric-lbl">Visualizaciones</div></div>
+          </div>
+          <div class="no-comments"><em>1 respuesta registrada no accesible en nitter.</em></div>
+        </div>
+
+        <div class="analysis-box">
+          <strong>Análisis 29 mar:</strong> Jornada dominada por el incendio de Sierra Espuña (#IFSierraEspuña). El retweet de @UMEgob acaparó el 73% de las visualizaciones del día (23.019 de 31.745). Tono general positivo: 80% de los comentarios analizados expresan apoyo y agradecimiento. El post del resumen semanal obtuvo el engagement más bajo, patrón habitual en contenidos compilatorios.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Informe generado automáticamente el 30 de marzo de 2026 · Fuentes: nitter.net/Defensagob · x.com (posts individuales) · nitter.net/UMEgob<br>
+  Datos de los informes diarios del 24, 25, 26 y 30 de marzo de 2026 · <strong>Uso interno — Ministerio de Defensa</strong>
+</div>
+
+<script>
+const NAVY = '#002b5c';
+const NAVY_MID = '#1a4a7a';
+const GOLD = '#c8a951';
+const LIGHT_BLUE = '#a8c4e0';
+const BLUE2 = '#5a8fc0';
+
+// Chart 1: Views per day
+new Chart(document.getElementById('chartViews'), {
+  type: 'bar',
+  data: {
+    labels: ['23 mar', '24 mar', '25 mar', '29 mar'],
+    datasets: [{
+      label: 'Visualizaciones totales',
+      data: [15986, 138846, 52970, 31745],
+      backgroundColor: [LIGHT_BLUE, GOLD, LIGHT_BLUE, LIGHT_BLUE],
+      borderColor: [NAVY_MID, '#a07830', NAVY_MID, NAVY_MID],
+      borderWidth: 2,
+      borderRadius: 4
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.raw.toLocaleString('es-ES') + ' views' } } },
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => v >= 1000 ? (v/1000).toFixed(0)+'K' : v, font:{size:11} } },
+      x: { ticks: { font:{size:11} } }
+    }
+  }
+});
+
+// Chart 2: Likes + Reposts
+new Chart(document.getElementById('chartEngagement'), {
+  type: 'bar',
+  data: {
+    labels: ['23 mar', '24 mar', '25 mar', '29 mar'],
+    datasets: [
+      { label: 'Likes', data: [276, 1531, 847, 406], backgroundColor: NAVY, borderRadius: 4 },
+      { label: 'Reposts', data: [75, 390, 189, 120], backgroundColor: GOLD, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels:{font:{size:11}} } },
+    scales: {
+      y: { beginAtZero: true, ticks: { font:{size:11} } },
+      x: { ticks: { font:{size:11} } }
+    }
+  }
+});
+
+// Chart 3: Tone pie
+new Chart(document.getElementById('chartTone'), {
+  type: 'doughnut',
+  data: {
+    labels: ['🟢 Positivo (34%)', '🔴 Negativo (37%)', '⚠️ Spam (4%)', '⚪ Indeterminado (25%)'],
+    datasets: [{
+      data: [19, 21, 2, 14],
+      backgroundColor: ['#1d7a48', '#8b1a1a', '#b35800', '#7f8c8d'],
+      borderColor: '#fff', borderWidth: 3
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '62%',
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Chart 4: Posts by type
+new Chart(document.getElementById('chartPosts'), {
+  type: 'bar',
+  data: {
+    labels: ['23 mar', '24 mar', '25 mar', '29 mar'],
+    datasets: [
+      { label: 'Posts propios', data: [4, 6, 4, 2], backgroundColor: NAVY, borderRadius: 4 },
+      { label: 'Retweets / Citas', data: [0, 1, 3, 1], backgroundColor: GOLD, borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels:{font:{size:11}} } },
+    scales: {
+      y: { beginAtZero: true, stacked: false, ticks: { stepSize:1, font:{size:11} } },
+      x: { ticks: { font:{size:11} } }
+    }
+  }
+});
+</script>
+</body>
+</html>
