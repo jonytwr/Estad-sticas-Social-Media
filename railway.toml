@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "playwright install chromium --with-deps && uvicorn main:app --host 0.0.0.0 --port $PORT"
+startCommand = "python parser.py /app/Informes_X"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
