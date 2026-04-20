@@ -168,9 +168,12 @@ def _try_nitter(handle: str, target_date: date) -> dict | None:
                     p["post_number"] = i
                     p["title"] = _generate_title(p["text"])
 
-                result["posts"] = posts_data
-                browser.close()
-                return result
+                if not posts_data:
+    logger.warning(f"Instancia {instance} cargó pero no encontró posts. Probando siguiente.")
+    continue
+result["posts"] = posts_data
+browser.close()
+return result
 
             except PwTimeout:
                 logger.warning(f"Timeout en {instance}")
