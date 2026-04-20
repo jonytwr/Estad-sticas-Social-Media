@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 
 # Instancias de Nitter a probar en orden (si una falla, se usa la siguiente)
 NITTER_INSTANCES = [
+    "https://nitter.tiekoetter.com",
+    "https://nitter.rawbit.ninja",
+    "https://nitter.d420.de",
+    "https://nitter.mint.lgbt",
+    "https://nitter.fdn.fr",
     "https://nitter.net",
     "https://nitter.privacydev.net",
     "https://nitter.poast.org",
